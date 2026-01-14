@@ -52,22 +52,47 @@ const loadVocab = () => {
   setShowHint(false);
 };
 
-// Parse CSV text into array of {en, th}
-const parseCsv = (csvText) => {
+// Parse CSV text into array of {en, th, image} OR into units if 'Unit' sections present
+const parseUnitsFromCsvText = (csvText) => {
   if (!csvText) return [];
-  const lines = csvText.trim().split('\n');
-  const parsed = [];
-  const startIndex = lines[0].toLowerCase().includes('en,th') ? 1 : 0;
-  for (let i = startIndex; i < lines.length; i++) {
-    const line = lines[i];
-    const parts = line.split(',');
+  const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+  // detect if file contains Unit sections
+  const hasUnit = lines.some(l => /^Unit\s*\d+/i.test(l));
+  if (!hasUnit) {
+    // fallback: parse as a flat CSV (header optional)
+    const startIndex = lines[0] && lines[0].toLowerCase().startsWith('en,') ? 1 : 0;
+    const parsed = [];
+    for (let i = startIndex; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length >= 2) {
+        parsed.push({ en: parts[0].trim().toLowerCase(), th: parts[1].trim(), image: parts[2]?.trim() || '' });
+      }
+    }
+    // return single unit containing all
+    return [{ name: 'All', items: parsed }];
+  }
+
+  const units = [];
+  let current = { name: 'Unit', items: [] };
+  for (const line of csvText.split(/\r?\n/)) {
+    const l = line.trim();
+    if (!l) continue;
+    const unitMatch = l.match(/^Unit\s*\d*/i);
+    if (unitMatch) {
+      // push previous if any
+      if (current.items && current.items.length) units.push(current);
+      current = { name: l, items: [] };
+      continue;
+    }
+    if (l.toLowerCase().startsWith('en,')) continue; // header
+    const parts = l.split(',');
     if (parts.length >= 2) {
-      const en = parts[0].trim().toLowerCase();
-      const th = parts[1].trim();
-      if (en) parsed.push({ en, th });
+      current.items.push({ en: parts[0].trim().toLowerCase(), th: parts[1].trim(), image: parts[2]?.trim() || '' });
     }
   }
-  return parsed;
+  if (current.items && current.items.length) units.push(current);
+  return units;
 };
 
 // Fetch CSV file and build units (10 units)
@@ -77,17 +102,16 @@ const loadCsvAndUnits = async () => {
     if (res.ok) {
       const text = await res.text();
       setCsvInput(text);
-      const parsed = parseCsv(text);
-      const built = buildUnits(parsed, 10);
-      setUnits(built);
+      const parsedUnits = parseUnitsFromCsvText(text);
+      setUnits(parsedUnits);
     } else {
       // fallback to defaults
-      const parsed = parseCsv(DEFAULT_CSV);
-      setUnits(buildUnits(parsed, 10));
+      const parsedUnits = parseUnitsFromCsvText(DEFAULT_CSV);
+      setUnits(parsedUnits);
     }
   } catch (e) {
-    const parsed = parseCsv(DEFAULT_CSV);
-    setUnits(buildUnits(parsed, 10));
+    const parsedUnits = parseUnitsFromCsvText(DEFAULT_CSV);
+    setUnits(parsedUnits);
   }
 };
 
@@ -179,15 +203,18 @@ const nextCard = () => {
 };
 
 // --- Helper Components ---
-const WordImage = ({ word }) => {
-  const [imgSrc, setImgSrc] = useState(`https://placehold.co/400x300/FFB347/ffffff?text=${word}`);
+const WordImage = ({ wordObj }) => {
+  // wordObj can be a string (word) or an object {en, th, image}
+  const word = typeof wordObj === 'string' ? wordObj : (wordObj?.en || '');
+  const imageUrl = typeof wordObj === 'object' ? (wordObj.image || '') : '';
+  const [imgSrc, setImgSrc] = useState(imageUrl || `https://placehold.co/400x300/FFB347/ffffff?text=${word}`);
 
   useEffect(() => {
-    setImgSrc(`https://placehold.co/400x300/FFB347/ffffff?text=${word}`);
-  }, [word]);
+    setImgSrc(imageUrl || `https://placehold.co/400x300/FFB347/ffffff?text=${word}`);
+  }, [word, imageUrl]);
 
   return (
-    <div className="w-full h-48 bg-white rounded-2xl shadow-inner border-4 border-blue-100 overflow-hidden flex items-center justify-center mb-4 relative">
+    <div className="w-full h-48 bg-white rounded-2xl shadow-inner border-4 border-blue-100 overflow-hidden flex items-center justify-center mb-4 relative word-image">
       <div className="absolute z-0 opacity-20">
         <ImageIcon size={64} className="text-gray-300" />
       </div>
@@ -265,22 +292,25 @@ if (view === 'home') {
     <div className="min-h-screen bg-blue-50 flex flex-col items-center pb-40 relative overflow-hidden font-sans">
       <div className="w-full max-w-4xl p-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-blue-700">เลือกหน่วยการเรียน (Units)</h1>
-        <button onClick={() => setIsAdminOpen(true)} className="px-3 py-2 bg-white rounded shadow">CSV</button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => loadCsvAndUnits()} className="px-3 py-2 bg-white rounded shadow">รีเฟรช</button>
+          <button onClick={() => setIsAdminOpen(true)} className="px-3 py-2 bg-white rounded shadow">CSV</button>
+        </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 max-w-4xl w-full px-6">
         {units.length === 0 && <div className="text-gray-500">กำลังโหลด...</div>}
         {units.map((u, idx) => (
           <div key={idx} className="unit-card bg-white rounded-2xl shadow p-4 flex flex-col items-center cursor-pointer hover:shadow-lg" onClick={() => {
             // load this unit
-            setVocabList(u);
+            setVocabList(u.items || []);
             setCurrentIndex(0);
             setScore(0);
             setCurrentInput("");
             setGameStatus('playing');
             setView('game');
           }}>
-            <div className="w-16 h-16 bg-orange-400 rounded-lg flex items-center justify-center text-white font-bold text-xl mb-3">U{idx+1}</div>
-            <div className="text-sm text-gray-600">คำศัพท์: {u.length}</div>
+            <div className="w-16 h-16 bg-orange-400 rounded-lg flex items-center justify-center text-white font-bold text-xl mb-3">{u.name}</div>
+            <div className="text-sm text-gray-600">คำศัพท์: { (u.items || []).length }</div>
             <div className="text-xs text-gray-400 mt-2">คลิกเพื่อเริ่ม</div>
           </div>
         ))}
@@ -321,6 +351,7 @@ return (
     {/* Header / Score */}
     <div className="app-header w-full max-w-md flex justify-between items-center p-4 z-10">
       <div className="bg-white px-4 py-2 rounded-full shadow-md flex items-center gap-2">
+          <button onClick={() => setView('home')} className="text-sm text-gray-500 mr-2">ย้อนกลับ</button>
         <Star className="text-yellow-400 fill-current" size={24} />
         <span className="font-bold text-xl text-gray-700">{score}</span>
       </div>

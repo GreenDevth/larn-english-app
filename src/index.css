@@ -105,3 +105,6 @@ body {
 /* Home unit cards */
 .unit-card { min-height: 120px; display:flex; align-items:center; justify-content:center; flex-direction:column }
 .unit-card .w-16 { width:64px; height:64px }
+
+.unit-card { padding: 18px }
+.unit-card .w-16 { width:64px; height:64px }
