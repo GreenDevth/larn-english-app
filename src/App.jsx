@@ -179,7 +179,7 @@ const LetterBox = ({ letter, status }) => {
   }
 
   return (
-    <div className={`w-10 h-12 sm:w-12 sm:h-14 md:w-14 md:h-16 border-b-4 rounded-lg flex items-center justify-center text-2xl sm:text-3xl font-bold transition-all duration-200 ${bgClass} ${borderClass} ${textClass} shadow-sm mx-1`}>
+    <div className={`letter-box w-10 h-12 sm:w-12 sm:h-14 md:w-14 md:h-16 border-b-4 rounded-lg flex items-center justify-center text-2xl sm:text-3xl font-bold transition-all duration-200 ${bgClass} ${borderClass} ${textClass} shadow-sm mx-1`}>
       {letter.toUpperCase()}
     </div>
   );
@@ -193,7 +193,7 @@ const Keyboard = ({ onKeyPress }) => {
   ];
 
   return (
-    <div className="w-full bg-white rounded-t-3xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-2 sm:p-4 fixed bottom-0 left-0 z-50 pb-6">
+    <div className="app-keyboard w-full bg-white rounded-t-3xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-2 sm:p-4 fixed bottom-0 left-0 z-50 pb-6">
       {rows.map((row, rIdx) => (
         <div key={rIdx} className="flex justify-center mb-2 gap-1 sm:gap-2">
           {row.map((char) => (
@@ -228,7 +228,7 @@ if (!currentWord && gameStatus !== 'complete') {
 }
 
 return (
-  <div className="min-h-screen bg-blue-50 flex flex-col items-center pb-80 relative overflow-hidden font-sans">
+  <div className="app-root min-h-screen bg-blue-50 flex flex-col items-center pb-80 relative overflow-hidden font-sans">
     <style>{`
       @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Sarabun:wght@400;700&display=swap');
       body { font-family: 'Fredoka', 'Sarabun', sans-serif; }
@@ -253,7 +253,7 @@ return (
       <Cloud size={96} />
     </div>
     {/* Header / Score */}
-    <div className="w-full max-w-md flex justify-between items-center p-4 z-10">
+    <div className="app-header w-full max-w-md flex justify-between items-center p-4 z-10">
       <div className="bg-white px-4 py-2 rounded-full shadow-md flex items-center gap-2">
         <Star className="text-yellow-400 fill-current" size={24} />
         <span className="font-bold text-xl text-gray-700">{score}</span>
@@ -274,9 +274,9 @@ return (
       </div>
     ) : (
       /* Game Screen */
-      <div className={`w-full max-w-md px-4 flex flex-col items-center z-10 transition-all ${gameStatus==='wrong' ? 'shake' : '' }`}>
+      <div className={`game-container w-full max-w-md px-4 flex flex-col items-center z-10 transition-all ${gameStatus==='wrong' ? 'shake' : '' }`}>
         {/* Card */}
-        <div className="bg-white p-4 rounded-3xl shadow-xl w-full border-b-8 border-blue-200">
+        <div className="card bg-white p-4 rounded-3xl shadow-xl w-full border-b-8 border-blue-200">
           <WordImage word={currentWord.en} />
           <div className="flex justify-between items-start mb-2">
             <div>
@@ -299,7 +299,7 @@ return (
           )}
         </div>
         {/* Letter Boxes */}
-        <div className="mt-8 flex flex-wrap justify-center gap-y-2">
+        <div className="letter-boxes mt-8 flex flex-wrap justify-center gap-y-2">
           {currentWord.en.split('').map((char, index) => (
             <LetterBox key={index} letter={currentInput[index] || "" } status={gameStatus==='correct' ? 'correct' : (gameStatus==='wrong' ? 'wrong' : 'default' )} />
           ))}
