@@ -28,35 +28,21 @@ const [gameStatus, setGameStatus] = useState('playing'); // playing, correct, wr
 const [isAdminOpen, setIsAdminOpen] = useState(false);
 const [csvInput, setCsvInput] = useState("");
 const [showHint, setShowHint] = useState(false);
+  const [view, setView] = useState('home'); // 'home' or 'game'
+  const [units, setUnits] = useState([]);
 
 // --- Initialization ---
 useEffect(() => {
-  loadVocab();
+  // Try to load CSV from /vocab/vocal.csv and build units
+  loadCsvAndUnits();
 }, []);
 
 const loadVocab = () => {
+  // loadVocab keeps its behavior but if units exist, load current unit
   const savedCSV = localStorage.getItem('vocabCSV');
-  const csvToParse = savedCSV || DEFAULT_CSV;
+  const csvToParse = savedCSV || csvInput || DEFAULT_CSV;
   setCsvInput(csvToParse);
-
-  const lines = csvToParse.trim().split('\n');
-  const parsed = [];
-  // Skip header if present
-  const startIndex = lines[0].toLowerCase().includes('en,th') ? 1 : 0;
-
-  for (let i = startIndex; i < lines.length; i++) {
-    const line = lines[i];
-    const parts = line.split(',');
-    if (parts.length >= 2) {
-      const en = parts[0].trim().toLowerCase();
-      const th = parts[1].trim();
-      if (en && th) {
-        parsed.push({ en, th });
-      }
-    }
-  }
-
-  // Shuffle logic
+  const parsed = parseCsv(csvToParse);
   const shuffled = parsed.sort(() => Math.random() - 0.5);
   setVocabList(shuffled);
   setCurrentIndex(0);
@@ -64,6 +50,56 @@ const loadVocab = () => {
   setCurrentInput("");
   setGameStatus('playing');
   setShowHint(false);
+};
+
+// Parse CSV text into array of {en, th}
+const parseCsv = (csvText) => {
+  if (!csvText) return [];
+  const lines = csvText.trim().split('\n');
+  const parsed = [];
+  const startIndex = lines[0].toLowerCase().includes('en,th') ? 1 : 0;
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i];
+    const parts = line.split(',');
+    if (parts.length >= 2) {
+      const en = parts[0].trim().toLowerCase();
+      const th = parts[1].trim();
+      if (en) parsed.push({ en, th });
+    }
+  }
+  return parsed;
+};
+
+// Fetch CSV file and build units (10 units)
+const loadCsvAndUnits = async () => {
+  try {
+    const res = await fetch('/vocab/vocal.csv');
+    if (res.ok) {
+      const text = await res.text();
+      setCsvInput(text);
+      const parsed = parseCsv(text);
+      const built = buildUnits(parsed, 10);
+      setUnits(built);
+    } else {
+      // fallback to defaults
+      const parsed = parseCsv(DEFAULT_CSV);
+      setUnits(buildUnits(parsed, 10));
+    }
+  } catch (e) {
+    const parsed = parseCsv(DEFAULT_CSV);
+    setUnits(buildUnits(parsed, 10));
+  }
+};
+
+const buildUnits = (list, count) => {
+  const per = Math.ceil(list.length / count) || 1;
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    const start = i * per;
+    const slice = list.slice(start, start + per);
+    out.push(slice);
+  }
+  return out;
 };
 
 const saveSettings = () => {
@@ -223,6 +259,36 @@ const Keyboard = ({ onKeyPress }) => {
 };
 
 // --- Render Logic ---
+if (view === 'home') {
+  // Home screen with unit selection
+  return (
+    <div className="min-h-screen bg-blue-50 flex flex-col items-center pb-40 relative overflow-hidden font-sans">
+      <div className="w-full max-w-4xl p-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-blue-700">เลือกหน่วยการเรียน (Units)</h1>
+        <button onClick={() => setIsAdminOpen(true)} className="px-3 py-2 bg-white rounded shadow">CSV</button>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 max-w-4xl w-full px-6">
+        {units.length === 0 && <div className="text-gray-500">กำลังโหลด...</div>}
+        {units.map((u, idx) => (
+          <div key={idx} className="unit-card bg-white rounded-2xl shadow p-4 flex flex-col items-center cursor-pointer hover:shadow-lg" onClick={() => {
+            // load this unit
+            setVocabList(u);
+            setCurrentIndex(0);
+            setScore(0);
+            setCurrentInput("");
+            setGameStatus('playing');
+            setView('game');
+          }}>
+            <div className="w-16 h-16 bg-orange-400 rounded-lg flex items-center justify-center text-white font-bold text-xl mb-3">U{idx+1}</div>
+            <div className="text-sm text-gray-600">คำศัพท์: {u.length}</div>
+            <div className="text-xs text-gray-400 mt-2">คลิกเพื่อเริ่ม</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 if (!currentWord && gameStatus !== 'complete') {
   return <div className="min-h-screen flex items-center justify-center bg-blue-50 text-2xl text-blue-400 font-bold">กำลังโหลด...</div>;
 }

@@ -101,3 +101,7 @@ body {
   .card { width: 520px; }
   .letter-box { width: 64px; height:64px; font-size:26px }
 }
+
+/* Home unit cards */
+.unit-card { min-height: 120px; display:flex; align-items:center; justify-content:center; flex-direction:column }
+.unit-card .w-16 { width:64px; height:64px }
