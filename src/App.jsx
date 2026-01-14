@@ -421,11 +421,38 @@ export default function App() {
     loadVocab();
   }, []);
 
-  const loadVocab = () => {
-    const savedCSV = localStorage.getItem('vocabCSV') || DEFAULT_CSV;
-    setCsvInput(savedCSV);
-    const parsedUnits = parseCSV(savedCSV);
-    setUnits(parsedUnits);
+  const loadVocab = async () => {
+    try {
+      // First, try to load from localStorage (user's custom edits)
+      const savedCSV = localStorage.getItem('vocabCSV');
+
+      if (savedCSV) {
+        // User has custom data, use it
+        setCsvInput(savedCSV);
+        const parsedUnits = parseCSV(savedCSV);
+        setUnits(parsedUnits);
+      } else {
+        // No custom data, load from external file
+        const response = await fetch('/vocab.csv');
+        if (response.ok) {
+          const csvText = await response.text();
+          setCsvInput(csvText);
+          const parsedUnits = parseCSV(csvText);
+          setUnits(parsedUnits);
+        } else {
+          // Fallback to hardcoded default if file not found
+          setCsvInput(DEFAULT_CSV);
+          const parsedUnits = parseCSV(DEFAULT_CSV);
+          setUnits(parsedUnits);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading vocab:', error);
+      // Fallback to hardcoded default on error
+      setCsvInput(DEFAULT_CSV);
+      const parsedUnits = parseCSV(DEFAULT_CSV);
+      setUnits(parsedUnits);
+    }
   };
 
   const loadCsvAndUnits = () => {
