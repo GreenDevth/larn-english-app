@@ -97,15 +97,25 @@ const parseUnitsFromCsvText = (csvText) => {
 
 // Fetch CSV file and build units (10 units)
 const loadCsvAndUnits = async () => {
+  const candidates = ['/vocab/new_vocab.csv', '/vocab/vocal.csv'];
   try {
-    const res = await fetch('/vocab/vocal.csv');
-    if (res.ok) {
-      const text = await res.text();
-      setCsvInput(text);
-      const parsedUnits = parseUnitsFromCsvText(text);
-      setUnits(parsedUnits);
-    } else {
-      // fallback to defaults
+    let found = false;
+    for (const path of candidates) {
+      try {
+        const res = await fetch(path);
+        if (res && res.ok) {
+          const text = await res.text();
+          setCsvInput(text);
+          const parsedUnits = parseUnitsFromCsvText(text);
+          setUnits(parsedUnits);
+          found = true;
+          break;
+        }
+      } catch (e) {
+        // try next candidate
+      }
+    }
+    if (!found) {
       const parsedUnits = parseUnitsFromCsvText(DEFAULT_CSV);
       setUnits(parsedUnits);
     }
