@@ -1,0 +1,6 @@
+/* Minimal global styles, you can add Tailwind or other CSS frameworks if needed */
+body {
+  margin: 0;
+  background: #f0f6ff;
+  font-family: 'Fredoka', 'Sarabun', sans-serif;
+}
