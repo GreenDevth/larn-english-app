@@ -211,13 +211,26 @@ const AdminPanel = ({ units: initialUnits, onSave, onCancel, voices, voicePrefs,
         </div>
 
         {/* Footer */}
-        <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end gap-3 shrink-0">
-          <button onClick={onCancel} className="px-6 py-3 text-gray-500 hover:bg-gray-100 rounded-xl font-bold transition-colors">
-            Cancel
+        <div className="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center shrink-0">
+          <button
+            onClick={() => {
+              if (confirm('ต้องการรีเซ็ตข้อมูลกลับไปเป็นค่าเริ่มต้นจากไฟล์ vocab.csv หรือไม่?')) {
+                localStorage.removeItem('vocabCSV');
+                window.location.reload();
+              }
+            }}
+            className="px-6 py-3 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl font-bold transition-colors"
+          >
+            🔄 Reset to Default
           </button>
-          <button onClick={handleSave} className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all active:scale-95 flex items-center">
-            <Save size={20} className="mr-2" /> Save Changes
-          </button>
+          <div className="flex gap-3">
+            <button onClick={onCancel} className="px-6 py-3 text-gray-500 hover:bg-gray-100 rounded-xl font-bold transition-colors">
+              Cancel
+            </button>
+            <button onClick={handleSave} className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all active:scale-95 flex items-center">
+              <Save size={20} className="mr-2" /> Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -844,9 +857,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-sky-50 flex flex-col items-center pb-80 relative overflow-hidden font-sans">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Sarabun:wght@400;700&display=swap');
-        body { font-family: 'Fredoka', 'Sarabun', sans-serif; }
-        .thai-font { font-family: 'Sarabun', sans-serif; }
+        body { font-family: 'Baloo 2 Local', 'Baloo 2', sans-serif; }
+        .thai-font { font-family: 'Sarabun Local', 'Sarabun', sans-serif; }
         .shake { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both; }
         @keyframes shake {
           10%,90% { transform: translate3d(-1px, 0, 0); }
