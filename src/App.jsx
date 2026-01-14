@@ -2,26 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { Volume2, Lightbulb, Settings, Star, Trophy, Image as ImageIcon, Delete, Send, CheckCircle, XCircle, Cloud, BookOpen, ChevronLeft, Play, Plus, Trash2, Save, Edit, GripVertical, ChevronDown, ChevronRight, SpellCheck } from 'lucide-react';
 import SummaryScreen from './components/SummaryScreen';
 
-// --- Mock Data (Default) ---
-const DEFAULT_CSV = `Unit 1
-EN,TH,ImageURL
-swing,ชิงช้า,https://img.freepik.com/free-vector/boy-playing-swing_1308-126.jpg?semt=ais_hybrid&w=740&q=80
-slide,สไลเดอร์,https://t4.ftcdn.net/jpg/02/10/48/66/360_F_210486634_t1g103eXfOdb6C2401103.jpg
-market,ตลาด,
-kitchen,ห้องครัว,
-bedroom,ห้องนอน,
-home,บ้าน,
-house,บ้าน,
-museum,พิพิธภัณฑ์,
-shop,ร้านค้า,
-bed,เตียง,
-Unit 2
-EN,TH,ImageURL
-tree,ต้นไม้,
-cat,แมว,
-dog,สุนัข,
-bird,นก,
-`;
+// --- No hard-coded data - all vocab loaded from vocab.csv ---
+
+// --- Error Modal Component ---
+const ErrorModal = ({ isOpen, onClose, title, message }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl animate-slide-up">
+        <div className="flex items-start gap-4 mb-4">
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+            <XCircle className="text-red-500" size={28} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+            <p className="text-gray-600 leading-relaxed whitespace-pre-line">{message}</p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all active:scale-95"
+        >
+          ตกลง
+        </button>
+      </div>
+    </div>
+  );
+};
 
 // --- Admin Helper: Generate CSV from Units ---
 const generateCSV = (units) => {
@@ -417,6 +425,9 @@ export default function App() {
   const [startTime, setStartTime] = useState(null); // Time when current word started
   const [attempts, setAttempts] = useState(0); // Number of attempts for current word
 
+  // Error Modal State
+  const [errorModal, setErrorModal] = useState({ isOpen: false, title: '', message: '' });
+
   useEffect(() => {
     const loadVoices = () => {
       if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -446,25 +457,38 @@ export default function App() {
         setUnits(parsedUnits);
       } else {
         // No custom data, load from external file
-        const response = await fetch('/vocab.csv');
+        // Use import.meta.env.BASE_URL to handle both dev and production paths
+        const basePath = import.meta.env.BASE_URL || '/';
+        const vocabPath = `${basePath}vocab.csv`.replace('//', '/');
+
+        console.log('Attempting to load vocab from:', vocabPath);
+        const response = await fetch(vocabPath);
+
         if (response.ok) {
           const csvText = await response.text();
           setCsvInput(csvText);
           const parsedUnits = parseCSV(csvText);
           setUnits(parsedUnits);
+          console.log('✅ Loaded vocab successfully:', parsedUnits.length, 'units');
         } else {
-          // Fallback to hardcoded default if file not found
-          setCsvInput(DEFAULT_CSV);
-          const parsedUnits = parseCSV(DEFAULT_CSV);
-          setUnits(parsedUnits);
+          // Show error modal if file not found
+          console.error('ไม่พบไฟล์ vocab.csv ที่:', vocabPath, 'Status:', response.status);
+          setErrorModal({
+            isOpen: true,
+            title: '⚠️ ไม่พบไฟล์ vocab.csv',
+            message: `ไม่สามารถโหลดไฟล์ข้อมูลคำศัพท์ได้\n\nกรุณาตรวจสอบว่าไฟล์ vocab.csv อยู่ในโฟลเดอร์ public/\n\nPath ที่พยายามโหลด: ${vocabPath}`
+          });
+          setUnits([]);
         }
       }
     } catch (error) {
       console.error('Error loading vocab:', error);
-      // Fallback to hardcoded default on error
-      setCsvInput(DEFAULT_CSV);
-      const parsedUnits = parseCSV(DEFAULT_CSV);
-      setUnits(parsedUnits);
+      setErrorModal({
+        isOpen: true,
+        title: '❌ เกิดข้อผิดพลาด',
+        message: `เกิดข้อผิดพลาดในการโหลดข้อมูล\n\n${error.message}`
+      });
+      setUnits([]);
     }
   };
 
@@ -835,6 +859,14 @@ export default function App() {
             saveVoicePrefs={saveVoicePrefs}
           />
         )}
+
+        {/* Error Modal */}
+        <ErrorModal
+          isOpen={errorModal.isOpen}
+          onClose={() => setErrorModal({ isOpen: false, title: '', message: '' })}
+          title={errorModal.title}
+          message={errorModal.message}
+        />
       </div>
     );
   }
@@ -986,6 +1018,14 @@ export default function App() {
       </div>
 
       <Keyboard onKeyPress={handleKeyPress} />
+
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={errorModal.isOpen}
+        onClose={() => setErrorModal({ isOpen: false, title: '', message: '' })}
+        title={errorModal.title}
+        message={errorModal.message}
+      />
     </div>
   );
 }
