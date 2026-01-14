@@ -2,11 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Local font-face (place woff2 files in public/fonts/) */
+@font-face {
+  font-family: 'Baloo 2 Local';
+  src: url('/fonts/Baloo2-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Baloo 2 Local';
+  src: url('/fonts/Baloo2-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sarabun Local';
+  src: url('/fonts/Sarabun-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sarabun Local';
+  src: url('/fonts/Sarabun-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Minimal global styles, you can add Tailwind or other CSS frameworks if needed */
 body {
   margin: 0;
   background: #f0f6ff;
-  font-family: 'Baloo 2', 'Fredoka', 'Sarabun', sans-serif;
+  /* Prefer local fonts when available, otherwise fall back to Google-hosted fonts */
+  font-family: 'Baloo 2 Local', 'Baloo 2', 'Fredoka', 'Sarabun Local', 'Sarabun', sans-serif;
 }
 
 /* Fallback styles so site looks good even if Tailwind utilities are not applied */

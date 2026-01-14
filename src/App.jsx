@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Volume2, Lightbulb, Settings, Star, Trophy, Image as ImageIcon, Delete, Send, CheckCircle, XCircle, Cloud, BookOpen, ChevronLeft, Play, Plus, Trash2, Save, Edit, GripVertical, ChevronDown, ChevronRight, SpellCheck } from 'lucide-react';
+import SummaryScreen from './components/SummaryScreen';
 
 // --- Mock Data (Default) ---
 const DEFAULT_CSV = `Unit 1
@@ -398,6 +399,11 @@ export default function App() {
   });
   const [particleType, setParticleType] = useState(null); // 'correct', 'wrong'
 
+  // Statistics tracking for Summary Screen
+  const [wordStats, setWordStats] = useState([]); // Array of {word, correct, time, attempts}
+  const [startTime, setStartTime] = useState(null); // Time when current word started
+  const [attempts, setAttempts] = useState(0); // Number of attempts for current word
+
   useEffect(() => {
     const loadVoices = () => {
       if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -543,6 +549,10 @@ export default function App() {
     setCurrentInput("");
     setGameStatus('playing');
     setScreen('game');
+    // Reset statistics
+    setWordStats([]);
+    setStartTime(Date.now());
+    setAttempts(0);
     // announce unit then the first word
     try { setTimeout(() => { speak(`เริ่ม ${unit?.name || 'บทเรียน'}`, 'th-TH', { interrupt: true }); }, 200); } catch (e) { }
   };
@@ -632,6 +642,7 @@ export default function App() {
     if (key === 'DELETE') {
       setCurrentInput(prev => prev.slice(0, -1));
       setGameStatus('playing');
+      setAttempts(prev => prev + 1); // Count delete as an attempt
       return;
     }
 
@@ -663,7 +674,19 @@ export default function App() {
     const currentWord = vocabList[currentIndex];
     if (!currentWord) return;
 
-    if (inputToCheck.toLowerCase() === currentWord.en.toLowerCase()) {
+    const isCorrect = inputToCheck.toLowerCase() === currentWord.en.toLowerCase();
+
+    if (isCorrect) {
+      // Record statistics for correct answer
+      const timeSpent = startTime ? (Date.now() - startTime) / 1000 : 0; // in seconds
+      setWordStats(prev => [...prev, {
+        word: currentWord.en,
+        thai: currentWord.th,
+        correct: true,
+        time: timeSpent,
+        attempts: attempts + 1
+      }]);
+
       setGameStatus('correct');
       setScore(prev => prev + 10);
       playSoundEffect('correct');
@@ -675,6 +698,7 @@ export default function App() {
       }, 4000); // 4s delay for full effect
     } else {
       setGameStatus('wrong');
+      setAttempts(prev => prev + 1); // Increment attempts on wrong answer
       playSoundEffect('wrong');
       setParticleType('wrong');
       setTimeout(() => setParticleType(null), 1000);
@@ -687,8 +711,12 @@ export default function App() {
       setCurrentInput("");
       setGameStatus('playing');
       setShowHint(false);
+      // Reset timing for next word
+      setStartTime(Date.now());
+      setAttempts(0);
     } else {
       setGameStatus('complete');
+      setScreen('summary'); // Go to summary screen instead of just setting status
       speak("ยินดีด้วย หนูเล่นจบเกมแล้ว เก่งมาก ๆ เลย", 'th-TH');
     }
   };
@@ -771,7 +799,19 @@ export default function App() {
     );
   }
 
-  // 2. Game Screen
+  // 2. Summary Screen
+  if (screen === 'summary') {
+    return (
+      <SummaryScreen
+        stats={wordStats}
+        unitName={currentUnit?.name || 'Unit'}
+        onRestart={() => startGame(currentUnit)}
+        onGoHome={goHome}
+      />
+    );
+  }
+
+  // 3. Game Screen
   const currentWord = vocabList[currentIndex];
 
   return (
