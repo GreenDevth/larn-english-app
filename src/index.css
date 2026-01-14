@@ -1,8 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Minimal global styles, you can add Tailwind or other CSS frameworks if needed */
 body {
   margin: 0;
   background: #f0f6ff;
-  font-family: 'Fredoka', 'Sarabun', sans-serif;
+  font-family: 'Baloo 2', 'Fredoka', 'Sarabun', sans-serif;
 }
 
 /* Fallback styles so site looks good even if Tailwind utilities are not applied */
@@ -91,6 +95,36 @@ body {
   border-top-right-radius: 14px;
   box-shadow: 0 -12px 30px rgba(2,6,23,0.06);
   z-index: 60;
+}
+
+/* Kid-friendly Home styles */
+.home-hero {
+  width: 100%;
+  max-width: 1000px;
+  margin: 2rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.hero-left {
+  display:flex;flex-direction:column;gap:0.5rem;
+}
+.hero-title { font-size: 2.1rem; color:#0e7490; font-weight:800 }
+.hero-sub { color:#0b5e4f; font-size:1rem }
+.home-grid { display:grid; grid-template-columns: repeat(2,1fr); gap:16px; max-width:1000px; margin:0 auto; padding:0 1rem 4rem }
+.unit-card { background: linear-gradient(180deg,#fff,#fff); border-radius:18px; padding:14px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); display:flex;flex-direction:column;align-items:center; gap:8px }
+.unit-thumb { width:88px;height:88px;border-radius:16px;background:#ffd6a5;overflow:hidden;display:flex;align-items:center;justify-content:center }
+.unit-thumb img{ width:100%;height:100%;object-fit:cover }
+.unit-name{ font-weight:800; font-size:1.1rem; color:#0369a1 }
+.unit-meta{ font-size:0.85rem; color:#475569 }
+
+@media (min-width: 640px) {
+  .home-grid { grid-template-columns: repeat(3,1fr) }
+}
+@media (min-width: 1024px) {
+  .home-grid { grid-template-columns: repeat(5,1fr) }
+  .hero-title { font-size: 2.6rem }
 }
 
 .app-keyboard button {
