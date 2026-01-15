@@ -284,7 +284,7 @@ const LetterBox = ({ letter, status }) => {
   );
 };
 
-const Keyboard = ({ onKeyPress }) => {
+const Keyboard = ({ onKeyPress, playKeySound }) => {
   const rows = [
     ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
     ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
@@ -296,7 +296,7 @@ const Keyboard = ({ onKeyPress }) => {
       {/* แถวที่ 1: Q-P (10 ปุ่ม) */}
       <div className="grid grid-cols-10 gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
         {rows[0].map((char) => (
-          <button key={char} onClick={() => onKeyPress(char)}
+          <button key={char} onClick={() => { playKeySound(); onKeyPress(char); }}
             className="aspect-square w-full bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 rounded-lg sm:rounded-xl font-bold text-base sm:text-lg shadow-[0_3px_0_rgb(219,234,254)] active:shadow-none active:translate-y-[2px] transition-all uppercase border-2 border-blue-100 relative top-0 active:top-[2px] flex items-center justify-center"
           >
             {char}
@@ -308,7 +308,7 @@ const Keyboard = ({ onKeyPress }) => {
       <div className="grid grid-cols-10 gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
         <div className="col-span-1"></div> {/* Spacer ซ้าย */}
         {rows[1].map((char) => (
-          <button key={char} onClick={() => onKeyPress(char)}
+          <button key={char} onClick={() => { playKeySound(); onKeyPress(char); }}
             className="aspect-square w-full bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 rounded-lg sm:rounded-xl font-bold text-base sm:text-lg shadow-[0_3px_0_rgb(219,234,254)] active:shadow-none active:translate-y-[2px] transition-all uppercase border-2 border-blue-100 relative top-0 active:top-[2px] flex items-center justify-center"
           >
             {char}
@@ -321,7 +321,7 @@ const Keyboard = ({ onKeyPress }) => {
         <div className="col-span-1"></div> {/* Spacer ซ้าย */}
         <div className="col-span-1"></div> {/* Spacer ซ้าย */}
         {rows[2].map((char) => (
-          <button key={char} onClick={() => onKeyPress(char)}
+          <button key={char} onClick={() => { playKeySound(); onKeyPress(char); }}
             className="aspect-square w-full bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 rounded-lg sm:rounded-xl font-bold text-base sm:text-lg shadow-[0_3px_0_rgb(219,234,254)] active:shadow-none active:translate-y-[2px] transition-all uppercase border-2 border-blue-100 relative top-0 active:top-[2px] flex items-center justify-center"
           >
             {char}
@@ -631,6 +631,36 @@ export default function App() {
       }
     } catch (e) {
       console.error("Audio FX error", e);
+    }
+  };
+
+  // เสียงกดปุ่มแบบพิมพ์ดีด
+  const playKeySound = () => {
+    try {
+      if (typeof window === 'undefined' || !window.AudioContext) return;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      // สร้างเสียงคลิกสั้น ๆ แบบพิมพ์ดีด
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      const now = ctx.currentTime;
+
+      // เสียงคลิกสั้น ๆ ความถี่สูง
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(800, now);
+
+      // Volume ต่ำและสั้นมาก
+      const vol = volume / 100 * 0.1; // ใช้ volume จาก state
+      gain.gain.setValueAtTime(vol, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } catch (e) {
+      // Ignore errors
     }
   };
 
@@ -1291,7 +1321,7 @@ export default function App() {
         )}
       </div>
 
-      <Keyboard onKeyPress={handleKeyPress} />
+      <Keyboard onKeyPress={handleKeyPress} playKeySound={playKeySound} />
 
       {/* Error Modal */}
       <ErrorModal
