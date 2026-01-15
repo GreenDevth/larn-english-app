@@ -73,7 +73,8 @@ body {
 }
 
 .card {
-  width: 420px;
+  width: 100%;
+  max-width: 420px;
   border-radius: 18px;
   background: #fff;
   box-shadow: 0 12px 30px rgba(2, 6, 23, 0.08);
@@ -82,7 +83,7 @@ body {
 }
 
 .card .word-image {
-  height: 200px;
+  height: clamp(140px, 26vh, 220px);
   border-radius: 12px;
   overflow: hidden;
   display: flex;
@@ -99,14 +100,15 @@ body {
 
 .letter-boxes {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   justify-content: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .letter-box {
-  width: 56px;
-  height: 56px;
+  min-width: 44px;
+  width: auto;
+  height: 52px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -114,8 +116,9 @@ body {
   background: #ffffff;
   border-bottom: 4px solid #e5e7eb;
   font-weight: 700;
-  font-size: 22px;
+  font-size: 20px;
   box-shadow: 0 6px 18px rgba(2, 6, 23, 0.06);
+  padding: 0 8px;
 }
 
 .app-keyboard {
@@ -124,11 +127,12 @@ body {
   right: 0;
   bottom: 0;
   background: #fff;
-  padding: 20px 16px;
+  padding: 12px 12px 12px 12px;
   border-top-left-radius: 14px;
   border-top-right-radius: 14px;
   box-shadow: 0 -12px 30px rgba(2, 6, 23, 0.06);
   z-index: 60;
+  padding-bottom: env(safe-area-inset-bottom, 12px);
 }
 
 /* Kid-friendly Home styles */
@@ -229,13 +233,14 @@ body {
 
 @media (min-width: 768px) {
   .card {
-    width: 520px;
+    max-width: 520px;
   }
 
   .letter-box {
-    width: 64px;
+    min-width: 56px;
     height: 64px;
-    font-size: 26px
+    font-size: 26px;
+    padding: 0 10px;
   }
 }
 

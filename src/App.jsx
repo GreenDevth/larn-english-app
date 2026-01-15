@@ -292,29 +292,55 @@ const Keyboard = ({ onKeyPress }) => {
   ];
 
   return (
-    <div className="w-full max-w-2xl bg-white/95 backdrop-blur rounded-t-3xl shadow-[0_-10px_40px_-5px_rgba(0,0,0,0.1)] p-4 sm:p-6 fixed bottom-0 left-0 right-0 mx-auto z-50 pb-6 animate-slide-up border-t border-gray-100">
-      {rows.map((row, rIdx) => (
-        <div key={rIdx} className="flex justify-center mb-2 gap-1.5 sm:gap-2">
-          {row.map((char) => (
-            <button key={char} onClick={() => onKeyPress(char)}
-              className="w-8 h-12 xs:w-10 xs:h-12 sm:w-11 sm:h-14 md:w-12 md:h-16 lg:w-14 lg:h-18 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 rounded-2xl font-bold text-lg sm:text-xl md:text-2xl shadow-[0_4px_0_rgb(219,234,254)] active:shadow-none active:translate-y-[4px] transition-all uppercase border-2 border-blue-100 relative top-0 active:top-[4px]"
-            >
-              {char}
-            </button>
-          ))}
-        </div>
-      ))}
-      <div className="flex justify-center gap-4 mt-4">
-        <button onClick={() => onKeyPress('DELETE')}
-          className="px-6 h-12 sm:h-14 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl font-bold shadow-[0_4px_0_rgb(254,202,202)] active:translate-y-[4px] active:shadow-none flex items-center justify-center border border-red-100 text-lg sm:text-xl active:top-[4px] relative"
+    <div className="w-full max-w-2xl bg-white/95 backdrop-blur rounded-t-3xl shadow-[0_-10px_40px_-5px_rgba(0,0,0,0.1)] p-3 sm:p-6 fixed bottom-0 left-0 right-0 mx-auto z-50 pb-safe animate-slide-up border-t border-gray-100">
+      {/* แถวที่ 1: Q-P (10 ปุ่ม) */}
+      <div className="grid grid-cols-10 gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
+        {rows[0].map((char) => (
+          <button key={char} onClick={() => onKeyPress(char)}
+            className="aspect-square w-full bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 rounded-lg sm:rounded-xl font-bold text-base sm:text-lg shadow-[0_3px_0_rgb(219,234,254)] active:shadow-none active:translate-y-[2px] transition-all uppercase border-2 border-blue-100 relative top-0 active:top-[2px] flex items-center justify-center"
+          >
+            {char}
+          </button>
+        ))}
+      </div>
+
+      {/* แถวที่ 2: A-L (9 ปุ่ม) - จัดกึ่งกลาง */}
+      <div className="grid grid-cols-10 gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
+        <div className="col-span-1"></div> {/* Spacer ซ้าย */}
+        {rows[1].map((char) => (
+          <button key={char} onClick={() => onKeyPress(char)}
+            className="aspect-square w-full bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 rounded-lg sm:rounded-xl font-bold text-base sm:text-lg shadow-[0_3px_0_rgb(219,234,254)] active:shadow-none active:translate-y-[2px] transition-all uppercase border-2 border-blue-100 relative top-0 active:top-[2px] flex items-center justify-center"
+          >
+            {char}
+          </button>
+        ))}
+      </div>
+
+      {/* แถวที่ 3: Z-M (7 ปุ่ม) - จัดกึ่งกลาง */}
+      <div className="grid grid-cols-10 gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+        <div className="col-span-1"></div> {/* Spacer ซ้าย */}
+        <div className="col-span-1"></div> {/* Spacer ซ้าย */}
+        {rows[2].map((char) => (
+          <button key={char} onClick={() => onKeyPress(char)}
+            className="aspect-square w-full bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 rounded-lg sm:rounded-xl font-bold text-base sm:text-lg shadow-[0_3px_0_rgb(219,234,254)] active:shadow-none active:translate-y-[2px] transition-all uppercase border-2 border-blue-100 relative top-0 active:top-[2px] flex items-center justify-center"
+          >
+            {char}
+          </button>
+        ))}
+        <div className="col-span-1"></div> {/* Spacer ขวา */}
+      </div>
+
+      {/* ปุ่มควบคุม */}
+      <div className="flex justify-center gap-2 sm:gap-3 px-2">
+        <button onClick={() => onKeyPress('CLEAR')}
+          className="flex-1 max-w-[160px] h-11 sm:h-12 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg font-bold shadow-[0_3px_0_rgb(255,237,213)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border border-orange-200 text-sm sm:text-base relative"
         >
-          <Delete size={24} className="mr-2" /> ลบ
+          <XCircle size={16} className="mr-1.5" /> ล้างทั้งหมด
         </button>
-        <button onClick={() => onKeyPress('ENTER')}
-          className="px-10 h-12 sm:h-14 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold shadow-[0_4px_0_rgb(21,128,61)] active:translate-y-[4px] active:shadow-none text-lg sm:text-xl flex items-center justify-center transition-all hover:scale-105 active:scale-100 active:top-[4px] relative"
+        <button onClick={() => onKeyPress('DELETE')}
+          className="flex-1 max-w-[140px] h-11 sm:h-12 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg font-bold shadow-[0_3px_0_rgb(254,202,202)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border border-red-100 text-sm sm:text-base relative"
         >
-          ส่งคำตอบ
-          <Send size={24} className="ml-2" />
+          <Delete size={16} className="mr-1.5" /> ลบ
         </button>
       </div>
     </div>
@@ -419,6 +445,19 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem('voicePrefs') || '{}'); } catch (e) { return {}; }
   });
   const [particleType, setParticleType] = useState(null); // 'correct', 'wrong'
+
+  // System voice language (EN/TH)
+  const [systemVoiceLang, setSystemVoiceLang] = useState(() => {
+    try { return localStorage.getItem('systemVoiceLang') || 'th'; } catch (e) { return 'th'; }
+  });
+
+  // Volume control (0-100)
+  const [volume, setVolume] = useState(() => {
+    try { return parseInt(localStorage.getItem('volume') || '70'); } catch (e) { return 70; }
+  });
+
+  // Background music
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
 
   // Statistics tracking for Summary Screen
   const [wordStats, setWordStats] = useState([]); // Array of {word, correct, time, attempts}
@@ -597,14 +636,85 @@ export default function App() {
 
   const playSoundEffect = (type) => {
     playGameSound(type); // Play SFX
+
     if (type === 'correct') {
-      speak("เก่งมาก ถูกต้องค่ะ", 'th-TH');
+      // คำชมภาษาไทย
+      const correctMessagesTH = [
+        "ถูกต้อง! เยี่ยมไปเลย",
+        "ถูกต้อง! เก่งมากเลย",
+        "ถูกต้อง! สุดยอดที่สุดเลย",
+        "ว้าว! ถูกต้องแล้ว เก่งมากเลย",
+        "เจ๋งมาก! นี่มันสุดยอดจริง ๆ",
+        "เยี่ยมมาก! ทำได้ดีสุด ๆ เลย",
+        "สุดยอดเลย! เก่งเกินคาดจริง ๆ",
+        "ว้าว! ตอบถูกแล้ว น่าประทับใจมาก",
+        "เก่งมาก ๆ เลย! น่ารักสุด ๆ",
+        "เยี่ยมจริง ๆ! สุดยอดฝีมือเลย"
+      ];
+
+      // คำชมภาษาอังกฤษ
+      const correctMessagesEN = [
+        "Correct! Excellent!",
+        "Correct! Great job!",
+        "Correct! Awesome!",
+        "Wow! That's right!",
+        "Amazing! Correct!"
+      ];
+
+      const messages = systemVoiceLang === 'en' ? correctMessagesEN : correctMessagesTH;
+      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+      const lang = systemVoiceLang === 'en' ? 'en-US' : 'th-TH';
+      speak(randomMessage, lang);
     } else if (type === 'wrong') {
-      speak("ยังไม่ถูก ลองใหม่นะคะ", 'th-TH');
+      // คำให้กำลังใจภาษาไทย
+      const wrongMessagesTH = [
+        "ไม่เป็นไรนะ ลองใหม่อีกครั้งได้",
+        "เกือบแล้ว! ลองคิดอีกนิดนะ",
+        "ยังไม่ถูกนะ มันต้องใส่ตัวอักษรอะไรดี",
+        "พลาดไปนิดเดียวเอง",
+        "ลองดูใหม่นะ อีกนิดเดียว",
+        "ดูเหมือนยังไม่ถูกนะ ลองใหม่อีกครั้งนะ",
+        "ยังไม่ใช่ แต่ความพยายามสุดยอดมาก",
+        "ยังไม่ถูกนะ ลองคิดอีกนิดนะ"
+      ];
+
+      // คำให้กำลังใจภาษาอังกฤษ
+      const wrongMessagesEN = [
+        "Oops! Try again!",
+        "Oops! Almost there!",
+        "Oops! Not quite!",
+        "Oh! One more time!",
+        "Hmm! Try once more!"
+      ];
+
+      const messages = systemVoiceLang === 'en' ? wrongMessagesEN : wrongMessagesTH;
+      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+      const lang = systemVoiceLang === 'en' ? 'en-US' : 'th-TH';
+      speak(randomMessage, lang);
     }
   };
 
   // --- Helpers / Actions ---
+  const createBonusUnit = (units, count = 20) => {
+    // รวบรวมคำศัพท์จากทุก unit
+    const allWords = [];
+    units.forEach(unit => {
+      if (unit.items && unit.items.length > 0) {
+        allWords.push(...unit.items);
+      }
+    });
+
+    // สุ่มคำศัพท์ (ไม่ซ้ำกัน) โดยใช้ Fisher-Yates shuffle
+    const shuffled = [...allWords].sort(() => Math.random() - 0.5);
+    const selectedWords = shuffled.slice(0, Math.min(count, allWords.length));
+
+    return {
+      name: '🎁 Bonus: ทบทวนทั้งหมด',
+      items: selectedWords,
+      isBonus: true
+    };
+  };
+
   const startGame = (unit) => {
     setCurrentUnit(unit);
     setVocabList(unit?.items || []);
@@ -635,7 +745,7 @@ export default function App() {
     setUnits(parsed);
     setCsvInput(contentToSave); // Update state too
     setIsAdminOpen(false);
-    speak("บันทึกข้อมูลเรียบร้อยแล้วค่ะ", 'th-TH');
+    speak("บันทึกข้อมูลเรียบร้อยแล้ว", 'th-TH');
   };
 
   const saveVoicePrefs = (prefs) => {
@@ -661,6 +771,40 @@ export default function App() {
     return candidates[0] || null;
   };
 
+  // ตรวจสอบเพศของเสียงจากชื่อ
+  const detectVoiceGender = (voice) => {
+    if (!voice || !voice.name) return 'neutral';
+    const name = voice.name.toLowerCase();
+
+    // คำที่บ่งบอกเพศหญิง
+    const femaleKeywords = ['female', 'woman', 'girl', 'samantha', 'kwanya', 'pattara', 'narisa', 'premwadee',
+      'serena', 'alloy', 'zoe', 'clara', 'fem', 'kate', 'luna', 'maya', 'siri', 'alexa',
+      'google.*female', 'th-th.*female'];
+
+    // คำที่บ่งบอกเพศชาย
+    const maleKeywords = ['male', 'man', 'boy', 'david', 'mark', 'james', 'google.*male', 'th-th.*male'];
+
+    // ตรวจสอบเพศหญิง
+    for (const keyword of femaleKeywords) {
+      if (name.includes(keyword)) return 'female';
+    }
+
+    // ตรวจสอบเพศชาย
+    for (const keyword of maleKeywords) {
+      if (name.includes(keyword)) return 'male';
+    }
+
+    return 'neutral'; // ไม่สามารถระบุได้
+  };
+
+  // เลือกคำลงท้ายที่เหมาะสม (ค่ะ/ครับ) ตามเพศของเสียง
+  const getPoliteEnding = (voice, femaleVersion, maleVersion, neutralVersion = '') => {
+    const gender = detectVoiceGender(voice);
+    if (gender === 'female') return femaleVersion;
+    if (gender === 'male') return maleVersion;
+    return neutralVersion || femaleVersion; // default เป็นหญิงถ้าไม่ระบุ
+  };
+
   const speak = (text, lang, opts = {}) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
     try {
@@ -668,12 +812,31 @@ export default function App() {
       if (lang) u.lang = lang;
       u.rate = opts.rate || 0.95;
       u.pitch = opts.pitch || 1;
-      u.volume = typeof opts.volume === 'number' ? opts.volume : 1;
-
+      u.volume = typeof opts.volume === 'number' ? opts.volume : (volume / 100);
       const prefName = (voicePrefs && voicePrefs[lang]) || null;
       let voiceToUse = null;
-      if (prefName) voiceToUse = voices.find(v => v.name === prefName) || null;
+      const langPrefix = (lang || '').toLowerCase().slice(0, 2);
+
+      if (prefName && voices && voices.length > 0) {
+        // Prefer an exact-name match that also supports the requested language prefix.
+        voiceToUse = voices.find(v => v.name === prefName && v.lang && v.lang.toLowerCase().startsWith(langPrefix))
+          // If exact-name+lang not found, fall back to exact-name (might be cross-lingual but better than nothing)
+          || voices.find(v => v.name === prefName) || null;
+        // If we found a pref but it's not ideal (language mismatch), prefer to ignore and pick a voice matching the language instead.
+        if (voiceToUse && voiceToUse.lang && !voiceToUse.lang.toLowerCase().startsWith(langPrefix)) {
+          // pick a voice matching the language; keep pref only if that's the only match
+          const langMatch = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(langPrefix));
+          if (langMatch) voiceToUse = langMatch;
+        }
+      }
+      // Allow caller to override voice directly via opts.voiceOverride
+      if (opts && opts.voiceOverride) {
+        voiceToUse = opts.voiceOverride;
+      }
+
+      // If still not selected, ensure we have a candidate
       if (!voiceToUse) voiceToUse = chooseVoiceForLang(lang) || null;
+
       if (voiceToUse) u.voice = voiceToUse;
 
       // Default interrupt to true if not specified
@@ -703,15 +866,16 @@ export default function App() {
   const handleKeyPress = (key) => {
     if (gameStatus !== 'playing' && gameStatus !== 'wrong') return;
 
+    if (key === 'CLEAR') {
+      setCurrentInput('');
+      setGameStatus('playing');
+      return;
+    }
+
     if (key === 'DELETE') {
       setCurrentInput(prev => prev.slice(0, -1));
       setGameStatus('playing');
       setAttempts(prev => prev + 1); // Count delete as an attempt
-      return;
-    }
-
-    if (key === 'ENTER') {
-      checkAnswer();
       return;
     }
 
@@ -781,7 +945,7 @@ export default function App() {
     } else {
       setGameStatus('complete');
       setScreen('summary'); // Go to summary screen instead of just setting status
-      speak("ยินดีด้วย หนูเล่นจบเกมแล้ว เก่งมาก ๆ เลย", 'th-TH');
+      speak("สุดยอดเลย! มาดูกันว่าคะแนนเป็นยังไงบ้าง", 'th-TH');
     }
   };
 
@@ -813,37 +977,129 @@ export default function App() {
             <p className="text-xl text-blue-600 mt-4 font-bold thai-font bg-white/50 py-2 px-6 rounded-full inline-block backdrop-blur-sm">
               มาเรียนภาษาอังกฤษกันเถอะ!
             </p>
-            <button onClick={() => setIsAdminOpen(true)} className="absolute top-1/2 -right-16 md:-right-24 text-gray-400 hover:text-blue-500 transition-colors p-2">
-              <Settings size={24} />
-            </button>
+
+            {/* ปุ่มควบคุมเสียงและการตั้งค่า */}
+            <div className="absolute top-1/2 -right-16 md:-right-24 flex flex-col gap-2">
+              {/* ปุ่มสลับภาษา */}
+              <button
+                onClick={() => {
+                  const newLang = systemVoiceLang === 'th' ? 'en' : 'th';
+                  setSystemVoiceLang(newLang);
+                  localStorage.setItem('systemVoiceLang', newLang);
+                }}
+                className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center font-bold text-xs"
+                title={systemVoiceLang === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นไทย'}
+              >
+                {systemVoiceLang.toUpperCase()}
+              </button>
+
+              {/* ปุ่มเพิ่มเสียง */}
+              <button
+                onClick={() => {
+                  const newVolume = Math.min(100, volume + 10);
+                  setVolume(newVolume);
+                  localStorage.setItem('volume', newVolume.toString());
+                }}
+                className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+                title="เพิ่มเสียง"
+              >
+                <Volume2 size={20} />
+              </button>
+
+              {/* ปุ่มลดเสียง */}
+              <button
+                onClick={() => {
+                  const newVolume = Math.max(0, volume - 10);
+                  setVolume(newVolume);
+                  localStorage.setItem('volume', newVolume.toString());
+                }}
+                className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+                title="ลดเสียง"
+              >
+                <Volume2 size={16} />
+              </button>
+
+              {/* ปุ่ม Settings */}
+              <button
+                onClick={() => setIsAdminOpen(true)}
+                className="w-12 h-12 bg-gray-100 hover:bg-blue-100 text-gray-400 hover:text-blue-500 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+                title="ตั้งค่า"
+              >
+                <Settings size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Units Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full px-4">
-            {units.map((unit, index) => (
-              <button
-                key={index}
-                onClick={() => startGame(unit)}
-                className="group relative bg-white rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-b-8 border-blue-100 active:border-b-0 active:translate-y-1 overflow-hidden"
+          <div className="w-full px-4 space-y-6">
+            {/* Bonus Unit Card */}
+            {units.length > 0 && (
+              <div
+                onClick={() => startGame(createBonusUnit(units, 20))}
+                className="bg-gradient-to-br from-amber-400 via-orange-400 to-red-400 text-white rounded-3xl p-6 shadow-2xl cursor-pointer hover:scale-[1.02] transition-all duration-300 border-4 border-amber-300 relative overflow-hidden group"
               >
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <BookOpen size={100} className="text-blue-500" />
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12"></div>
                 </div>
-                <div className="flex flex-col items-start relative z-10">
-                  <div className="w-16 h-16 rounded-2xl bg-blue-100 text-blue-500 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300 shadow-sm">
-                    <span className="text-2xl font-black">{index + 1}</span>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-1">{unit.name}</h3>
-                  <p className="text-gray-500 thai-font">{(unit.items || unit.words || []).length} คำศัพท์</p>
 
-                  <div className="mt-6 w-full flex justify-end">
-                    <div className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg group-hover:bg-blue-600 transition-colors">
-                      <Play size={24} fill="currentColor" />
+                {/* Content */}
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <Trophy className="text-yellow-200" size={36} />
+                      <h3 className="text-2xl font-bold">Bonus: ทบทวนทั้งหมด</h3>
+                    </div>
+                    <Star className="text-yellow-200 animate-pulse" size={32} fill="currentColor" />
+                  </div>
+
+                  <p className="text-amber-50 text-sm mb-3">
+                    สุ่มคำศัพท์จากทุก Unit มา 20 ข้อเพื่อทบทวน
+                  </p>
+
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="bg-white/20 px-3 py-1.5 rounded-full backdrop-blur font-bold">
+                      📚 {units.reduce((sum, u) => sum + (u.items?.length || 0), 0)} คำทั้งหมด
+                    </span>
+                    <span className="bg-white/20 px-3 py-1.5 rounded-full backdrop-blur font-bold">
+                      🎲 สุ่ม 20 ข้อ
+                    </span>
+                  </div>
+                </div>
+
+                {/* Shine Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              </div>
+            )}
+
+            {/* Regular Units Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {units.map((unit, index) => (
+                <button
+                  key={index}
+                  onClick={() => startGame(unit)}
+                  className="group relative bg-white rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-b-8 border-blue-100 active:border-b-0 active:translate-y-1 overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <BookOpen size={100} className="text-blue-500" />
+                  </div>
+                  <div className="flex flex-col items-start relative z-10">
+                    <div className="w-16 h-16 rounded-2xl bg-blue-100 text-blue-500 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300 shadow-sm">
+                      <span className="text-2xl font-black">{index + 1}</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800 mb-1">{unit.name}</h3>
+                    <p className="text-gray-500 thai-font">{(unit.items || unit.words || []).length} คำศัพท์</p>
+
+                    <div className="mt-6 w-full flex justify-end">
+                      <div className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg group-hover:bg-blue-600 transition-colors">
+                        <Play size={24} fill="currentColor" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -927,11 +1183,29 @@ export default function App() {
 
       {/* Navbar */}
       <div className="w-full bg-white shadow-sm p-4 flex justify-between items-center z-20 px-4 md:px-8 sticky top-0">
-        <button onClick={goHome} className="flex items-center text-gray-500 hover:text-blue-600 font-bold transition-colors">
-          <ChevronLeft size={24} className="mr-1" />
-          <span className="hidden sm:inline">เลือกบทเรียน</span>
-        </button>
-        <h2 className="text-xl font-bold text-gray-800">{currentUnit?.name}</h2>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={goHome}
+            className="flex items-center justify-center w-10 h-10 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+            title="กลับหน้าหลัก"
+          >
+            <ChevronLeft size={24} />
+          </button>
+
+          <button
+            onClick={() => {
+              const newLang = systemVoiceLang === 'th' ? 'en' : 'th';
+              setSystemVoiceLang(newLang);
+              localStorage.setItem('systemVoiceLang', newLang);
+            }}
+            className="flex items-center justify-center gap-1.5 px-3 h-10 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 text-purple-600 rounded-xl transition-all font-bold text-sm border-2 border-purple-200"
+            title={systemVoiceLang === 'th' ? 'เปลี่ยนเป็นภาษาอังกฤษ' : 'Switch to Thai'}
+          >
+            <Volume2 size={16} />
+            <span className="uppercase">{systemVoiceLang}</span>
+          </button>
+        </div>
+        <h2 className="text-xl font-bold text-gray-800 truncate max-w-[40%]">{currentUnit?.name}</h2>
         <div className="bg-yellow-100 px-4 py-2 rounded-full flex items-center gap-2 border border-yellow-200">
           <Star className="text-yellow-500 fill-current" size={20} />
           <span className="font-bold text-yellow-700">{score}</span>
