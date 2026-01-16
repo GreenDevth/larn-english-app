@@ -12,13 +12,37 @@ shop,ร้านค้า,https://example.com/shop.jpg
 bed,เตียง,https://example.com/bed.jpg
 Unit 2
 EN,TH,ImageURL
-swing,ชิงช้า,https://example.com/swing.jpg
-slide,สไลเดอร์,https://example.com/slide.jpg
-market,ตลาด,https://example.com/market.jpg
-kitchen,ห้องครัว,https://example.com/kitchen.jpg
-bedroom,ห้องนอน,https://example.com/bedroom.jpg
-home,บ้าน,https://example.com/home.jpg
-house,บ้าน,https://example.com/house.jpg
-museum,พิพิธภัณฑ์,https://example.com/museum.jpg
-shop,ร้านค้า,https://example.com/shop.jpg
-bed,เตียง,https://example.com/bed.jpg
+Alarm clock,นาฬิกาปลุก,https://example.com/alarm_clock.jpg
+Night table,โต๊ะข้างเตียงนอน,https://example.com/night_table.jpg
+Pillow,หมอน,https://example.com/pillow.jpg
+Bookshelf,ชั้นวางหนังสือ,https://example.com/bookshelf.jpg
+Blanket,ผ้าห่ม,https://example.com/blanket.jpg
+Bathroom,ห้องน้ำ,https://example.com/bathroom.jpg
+Sink,อ่างล้างหน้า,https://example.com/sink.jpg
+Shower,อาบน้ำ,https://example.com/shower.jpg
+Toilet,โถส้วม ห้องส้วม,https://example.com/toilet.jpg
+Toilet roll,กระดาษชำระ,https://example.com/toilet_roll.jpg
+Unit 3
+EN,TH,ImageURL
+Towel,ผ้าขนหนู,https://example.com/towel.jpg
+Living room,ห้องนั่งเล่น,https://example.com/living_room.jpg
+Sofa,โซฟา,https://example.com/sofa.jpg
+Picture,รูปภาพ,https://example.com/picture.jpg
+Lamp,โคมไฟ,https://example.com/lamp.jpg
+Television,โทรทัศน์,https://example.com/television.jpg
+Garage,โรงรถ,https://example.com/garage.jpg
+Dining room,ห้องรับประทานอาหาร,https://example.com/dining_room.jpg
+Refrigerator,ตู้เย็น,https://example.com/refrigerator.jpg
+Plate,จาน,https://example.com/plate.jpg
+Unit 4
+EN,TH,ImageURL
+Rice cooker,หม้อหุงข้าว,https://example.com/rice_cooker.jpg
+Stove,เตา,https://example.com/stove.jpg
+Pot,หม้อ,https://example.com/pot.jpg
+Cupboard,ตู้ ตู้กับข้าว,https://example.com/cupboard.jpg
+Armchair,เก้าอี้พักผ่อน เก้าอี้ที่มีที่วางแขน,https://example.com/armchair.jpg
+In,ใน,https://example.com/in.jpg
+On,บน,https://example.com/on.jpg
+Under,ใต้,https://example.com/under.jpg
+Upstairs,ที่อยู่ชั้นชั้นบน,https://example.com/upstairs.jpg
+Downstairs,ที่อยู่ชั้นล่าง,https://example.com/downstairs.jpg
