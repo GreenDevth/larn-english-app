@@ -912,7 +912,7 @@ export default function App() {
       }, 500);
       return () => clearTimeout(tid);
     }
-  }, [currentIndex, screen, vocabList, voices]); // Removed voicePrefs to prevent re-triggering during pref change
+  }, [currentIndex, screen, vocabList, voices, speak]); // Added speak to dependencies
 
   // Auto-hide hint after 5 seconds
   useEffect(() => {
