@@ -842,8 +842,14 @@ export default function App() {
     setStartTime(Date.now());
     setAttempts(0);
 
-    // --- FIX 4: Removed conflicting speech to allow the first word to be spoken correctly ---
-    // try { speak(`เริ่ม ${unit?.name || 'บทเรียน'}`, 'th-TH', { interrupt: true }); } catch (e) { }
+    // Speak unit name after a short delay (to ensure audio is unlocked)
+    setTimeout(() => {
+      try {
+        speak(`เริ่ม ${unit?.name || 'บทเรียน'}`, 'th-TH');
+      } catch (e) {
+        console.error('Failed to speak unit name:', e);
+      }
+    }, 100);
   };
 
   const goHome = () => {
