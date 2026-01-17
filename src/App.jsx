@@ -467,7 +467,7 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem('voicePrefs') || '{}'); } catch (e) { return {}; }
   });
   const [particleType, setParticleType] = useState(null); // 'correct', 'wrong'
-  const [audioUnlocked, setAudioUnlocked] = useState(false);
+
 
   // System voice language (EN/TH)
   const [systemVoiceLang, setSystemVoiceLang] = useState(() => {
@@ -898,9 +898,6 @@ export default function App() {
         try { window.speechSynthesis.cancel(); } catch (e) { }
       }
 
-      // Resume for mobile (iOS requires this)
-      try { window.speechSynthesis.resume(); } catch (e) { }
-
       window.speechSynthesis.speak(u);
     } catch (e) {
       // ignore if not available
@@ -928,44 +925,6 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [showHint]);
-
-  // Unlock audio on mobile devices
-  useEffect(() => {
-    const unlockAudio = () => {
-      if (!audioUnlocked && typeof window !== 'undefined' && window.speechSynthesis) {
-        try {
-          // Resume speech synthesis (required for iOS)
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.resume();
-
-          // Create a silent utterance to unlock audio
-          const utterance = new SpeechSynthesisUtterance(' ');
-          utterance.volume = 0.01; // Very quiet but not 0
-          utterance.rate = 10; // Very fast
-          window.speechSynthesis.speak(utterance);
-
-          setAudioUnlocked(true);
-          console.log('Audio unlocked for mobile');
-        } catch (e) {
-          console.error('Failed to unlock audio:', e);
-        }
-      }
-    };
-
-    // Listen for first user interaction
-    document.addEventListener('touchstart', unlockAudio, { once: true });
-    document.addEventListener('click', unlockAudio, { once: true });
-
-    // Also try to unlock when entering game screen
-    if (screen === 'game') {
-      unlockAudio();
-    }
-
-    return () => {
-      document.removeEventListener('touchstart', unlockAudio);
-      document.removeEventListener('click', unlockAudio);
-    };
-  }, [audioUnlocked, screen]);
 
   // --- Game Logic ---
   const handleKeyPress = (key) => {
