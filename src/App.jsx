@@ -926,33 +926,54 @@ export default function App() {
     return neutralVersion || femaleVersion; // default เป็นหญิงถ้าไม่ระบุ
   };
 
+  // Global array to prevent GC of queued utterances
+  if (typeof window !== 'undefined' && !window.speechUtterances) window.speechUtterances = [];
+
   const speak = (text, lang = 'en-US', opts = {}) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     try {
-      // Clear old utterances
-      window.speechSynthesis.cancel();
+      // Default interrupt to true if not specified
+      const shouldInterrupt = opts.interrupt !== false;
 
-      // Use GLOBAL variable to prevent Chrome garbage collection
-      globalUtterance = new SpeechSynthesisUtterance(String(text || ''));
+      if (shouldInterrupt) {
+        window.speechSynthesis.cancel();
+        if (window.speechUtterances) { // Ensure it exists before clearing
+          window.speechUtterances = []; // Clear our refs too
+        }
+      }
 
-      // Basic config
-      globalUtterance.lang = lang || 'en-US';
-      globalUtterance.rate = opts.rate || 1; // Normal speed
-      globalUtterance.pitch = opts.pitch || 1;
-      globalUtterance.volume = typeof opts.volume === 'number' ? opts.volume : (volume / 100);
+      const utterance = new SpeechSynthesisUtterance(String(text || ''));
 
-      // *** CRITICAL: DO NOT set .voice - let Chrome choose based on lang ***
-      // This is the key fix for Chrome Android!
+      // Keep reference to prevent GC
+      if (window.speechUtterances) { // Ensure it exists before pushing
+        window.speechUtterances.push(utterance);
+      }
 
-      // Debug events
-      globalUtterance.onstart = () => console.log("▶️ Speech started:", text);
-      globalUtterance.onend = () => console.log("✅ Speech ended");
-      globalUtterance.onerror = (e) => {
-        console.error("❌ Speech error:", e.error, e);
+      // Cleanup on end
+      utterance.onend = () => {
+        console.log("✅ Speech ended");
+        // Remove from array (filter out this specific instance)
+        if (window.speechUtterances) {
+          window.speechUtterances = window.speechUtterances.filter(u => u !== utterance);
+        }
+      };
+      utterance.onerror = (e) => {
+        console.error("❌ Speech error:", e);
+        if (window.speechUtterances) {
+          window.speechUtterances = window.speechUtterances.filter(u => u !== utterance);
+        }
       };
 
-      // Resume if needed (for mobile)
+      // Basic config
+      utterance.lang = lang || 'en-US';
+      utterance.rate = opts.rate || 1;
+      utterance.pitch = opts.pitch || 1;
+      utterance.volume = typeof opts.volume === 'number' ? opts.volume : (volume / 100);
+
+      // NO .voice setting for Chrome Android safety
+
+      // Resume if needed
       try {
         if (window.speechSynthesis.paused || window.speechSynthesis.pending) {
           window.speechSynthesis.resume();
@@ -960,7 +981,7 @@ export default function App() {
       } catch (e) { }
 
       // Speak!
-      window.speechSynthesis.speak(globalUtterance);
+      window.speechSynthesis.speak(utterance);
     } catch (e) {
       console.error('❌ speak() exception:', e);
     }
@@ -982,8 +1003,9 @@ export default function App() {
               window.speechSynthesis.resume();
             }
           }
-          // Speak with interrupt: true is generally safe here if we waited 500ms
-          speak(w.en, 'en-US', { interrupt: true });
+          // Auto-read: queue after "Start Unit" speech
+          // interrupt: false allows it to wait if "Start Unit" is still speaking
+          speak(w.en, 'en-US', { interrupt: false });
         }
       }, 500);
 
