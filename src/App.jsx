@@ -927,645 +927,204 @@ export default function App() {
     }
   };
 
-  // Auto-read the current word when in game view
-  useEffect(() => {
-    if (screen === 'game' && vocabList && vocabList.length > 0) {
-      const w = vocabList[currentIndex];
-      // Small delay to allow transition/voices to load (reduced for mobile)
-      const tid = setTimeout(() => {
-        if (w && w.en) {
-          console.log('🔊 Attempting to speak:', w.en);
-          // Resume for mobile browsers
-          if (typeof window !== 'undefined' && window.speechSynthesis) {
-            window.speechSynthesis.resume();
-          }
-          speak(w.en, 'en-US', { interrupt: false });
-        }
-      }, 100); // Reduced from 500ms to 100ms for mobile
-      return () => clearTimeout(tid);
-    }
-  }, [currentIndex, screen, vocabList, voices]); // Removed speak to prevent re-triggering
-
-  // Auto-hide hint after 5 seconds
-  useEffect(() => {
-    if (showHint) {
-      const timer = setTimeout(() => {
-        setShowHint(false);
-      }, 5000); // 5 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [showHint]);
-
-  // --- Game Logic ---
-  const handleKeyPress = (key) => {
-    if (gameStatus !== 'playing' && gameStatus !== 'wrong') return;
-
-    if (key === 'SHIFT') {
-      setIsShiftActive(prev => !prev);
-      return;
-    }
-
-    if (key === 'CLEAR') {
-      setCurrentInput('');
-      setGameStatus('playing');
-      setIsShiftActive(false); // Reset shift when clearing
-      return;
-    }
-
-    if (key === 'DELETE') {
-      setCurrentInput(prev => prev.slice(0, -1));
-      setGameStatus('playing');
-      setAttempts(prev => prev + 1); // Count delete as an attempt
-      return;
-    }
-
-    if (key === 'SPACE') {
-      const currentWord = vocabList[currentIndex];
-      const maxLen = currentWord?.en.length || 0;
-
-      if (currentInput.length < maxLen) {
-        const newInput = currentInput + ' ';
-        setCurrentInput(newInput);
-        setGameStatus('playing');
-
-        // Auto-check if full length reached
-        if (newInput.length === maxLen) {
-          checkAnswer(newInput);
-        }
+  // Enhanced playTextToSpeech function with fallback and user interaction
+  const playTextToSpeech = (text, lang) => {
+    try {
+      if (typeof window === 'undefined' || !window.speechSynthesis) {
+        alert("Your browser does not support text-to-speech functionality.");
+        return;
       }
-      return;
-    }
 
-    // Play letter sound REMOVED (User request)
-    // speak(key, 'en-US', { rate: 1.2, interrupt: true });
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
 
-    const currentWord = vocabList[currentIndex];
-    const maxLen = currentWord?.en.length || 0;
-
-    if (currentInput.length < maxLen) {
-      // Apply shift if active
-      const charToAdd = isShiftActive ? key.toUpperCase() : key.toLowerCase();
-      const newInput = currentInput + charToAdd;
-      setCurrentInput(newInput);
-      setGameStatus('playing');
-
-      // Turn off shift after typing a letter (like real keyboard)
-      setIsShiftActive(false);
-
-      // Auto-check if full length reached
-      if (newInput.length === maxLen) {
-        checkAnswer(newInput);
+      const voice = voices.find(v => v.lang === lang);
+      if (voice) {
+        utterance.voice = voice;
       }
+
+      // Fallback to a default voice if available
+      if (!voice && voices.length > 0) {
+        utterance.voice = voices[0];
+      }
+
+      // Play the utterance
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.error("TTS Error:", e);
     }
   };
 
-  const checkAnswer = (paramInput) => {
-    const inputToCheck = typeof paramInput === 'string' ? paramInput : currentInput;
-    const currentWord = vocabList[currentIndex];
-    if (!currentWord) return;
+  return (
+    <div className="font-sans antialiased bg-gray-50 min-h-screen flex flex-col">
+      {/* Admin Panel - สำหรับแก้ไขคำศัพท์ */}
+      {isAdminOpen && (
+        <AdminPanel
+          units={units}
+          onSave={(newCsv) => {
+            setParticleType('correct');
+            saveSettings(newCsv);
+          }}
+          onCancel={() => setIsAdminOpen(false)}
+          voices={voices}
+          voicePrefs={voicePrefs}
+          setVoicePrefs={setVoicePrefs}
+          saveVoicePrefs={saveVoicePrefs}
+        />
+      )}
 
-    const isCorrect = inputToCheck.toLowerCase() === currentWord.en.toLowerCase();
-
-    if (isCorrect) {
-      // Record statistics for correct answer
-      const timeSpent = startTime ? (Date.now() - startTime) / 1000 : 0; // in seconds
-      setWordStats(prev => [...prev, {
-        word: currentWord.en,
-        thai: currentWord.th,
-        correct: true,
-        time: timeSpent,
-        attempts: attempts + 1
-      }]);
-
-      setGameStatus('correct');
-      setScore(prev => prev + 10);
-      playSoundEffect('correct');
-      setParticleType('correct');
-      setTimeout(() => setParticleType(null), 3500); // Extended for fireworks
-
-      setTimeout(() => {
-        nextCard();
-      }, 4000); // 4s delay for full effect
-    } else {
-      setGameStatus('wrong');
-      setAttempts(prev => prev + 1); // Increment attempts on wrong answer
-      playSoundEffect('wrong');
-      setParticleType('wrong');
-      setTimeout(() => setParticleType(null), 1000);
-    }
-  };
-
-  const nextCard = () => {
-    if (currentIndex < vocabList.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-      setCurrentInput("");
-      setGameStatus('playing');
-      setShowHint(false);
-      // Reset timing for next word
-      setStartTime(Date.now());
-      setAttempts(0);
-    } else {
-      setGameStatus('complete');
-      setScreen('summary'); // Go to summary screen instead of just setting status
-      speak("สุดยอดเลย! มาดูกันว่าคะแนนเป็นยังไงบ้าง", 'th-TH');
-    }
-  };
-
-
-
-  // --- Screens ---
-
-  // Collapsible Nav Component
-  const CollapsibleNav = () => {
-    return (
-      <>
-        {/* Hamburger Button */}
-        <button
-          onClick={() => setIsNavOpen(!isNavOpen)}
-          className="fixed top-4 left-4 z-[70] w-12 h-12 bg-white hover:bg-blue-50 text-blue-600 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-          title={isNavOpen ? 'ปิดเมนู' : 'เปิดเมนู'}
-        >
-          {isNavOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-
-        {/* Backdrop */}
-        {isNavOpen && (
-          <div
-            onClick={() => setIsNavOpen(false)}
-            className="fixed inset-0 bg-black/30 z-[60] backdrop-blur-sm animate-fade-in"
-          />
-        )}
-
-        {/* Slide-in Menu */}
-        <div
-          className={`fixed top-0 left-0 h-full w-72 bg-white shadow-2xl z-[65] transition-transform duration-300 ease-out ${isNavOpen ? 'translate-x-0' : '-translate-x-full'
-            }`}
-        >
-          <div className="p-6 h-full flex flex-col">
-            {/* Header */}
-            <div className="mb-8 pb-4 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <Settings size={24} className="text-blue-500" />
-                ตั้งค่า
-              </h3>
+      {/* Navigation - ซ่อนในหน้าเกม */}
+      {screen === 'home' && (
+        <div className="fixed inset-x-0 top-0 z-50">
+          <div className="container mx-auto px-4 py-2 flex justify-between items-center">
+            <div className="text-xl font-bold text-blue-600">
+              {/* Logo หรือ ชื่อแอปพลิเคชัน */}
+              Vocab Trainer
             </div>
-
-            {/* Menu Items */}
-            <div className="flex-1 space-y-3">
-              {/* ปุ่มสลับภาษาระบบ */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">ภาษาระบบ</label>
-                <button
-                  onClick={() => {
-                    const newLang = systemVoiceLang === 'th' ? 'en' : 'th';
-                    setSystemVoiceLang(newLang);
-                    localStorage.setItem('systemVoiceLang', newLang);
-                  }}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-bold"
-                >
-                  <span className="flex items-center gap-2">
-                    <Volume2 size={20} />
-                    {systemVoiceLang === 'th' ? 'ภาษาไทย' : 'English'}
-                  </span>
-                  <span className="text-xs bg-white/20 px-2 py-1 rounded">{systemVoiceLang.toUpperCase()}</span>
-                </button>
+            <div className="flex items-center gap-4">
+              {/* ปุ่มเสียง */}
+              <div className="flex items-center gap-2">
+                <Volume2 size={20} className="text-gray-600" />
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={volume}
+                  onChange={(e) => setVolume(Math.min(100, Math.max(0, e.target.value)))}
+                  className="w-24 accent-blue-500"
+                />
               </div>
 
-              {/* ควบคุมระดับเสียง */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">ระดับเสียง</label>
-                <div className="space-y-3">
-                  {/* แสดงระดับเสียงปัจจุบัน */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all duration-300"
-                        style={{ width: `${volume}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-bold text-gray-700 w-12 text-right">{volume}%</span>
-                  </div>
-
-                  {/* ปุ่มปรับเสียง */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        const newVolume = Math.max(0, volume - 10);
-                        setVolume(newVolume);
-                        localStorage.setItem('volume', newVolume.toString());
-                      }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-bold text-sm"
-                    >
-                      <Volume2 size={16} />
-                      ลดเสียง
-                    </button>
-                    <button
-                      onClick={() => {
-                        const newVolume = Math.min(100, volume + 10);
-                        setVolume(newVolume);
-                        localStorage.setItem('volume', newVolume.toString());
-                      }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-bold text-sm"
-                    >
-                      <Volume2 size={20} />
-                      เพิ่มเสียง
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* ปุ่มจัดการบทเรียน */}
-              <button
-                onClick={() => {
-                  setIsAdminOpen(true);
-                  setIsNavOpen(false);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-bold"
-              >
-                <Settings size={20} />
-                จัดการบทเรียน
+              {/* ปุ่มเมนู - สำหรับเปิดปิด Admin Panel */}
+              <button onClick={() => setIsAdminOpen(true)} className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
+                <Settings size={20} className="text-blue-600" />
               </button>
             </div>
-
-            {/* Footer */}
-            <div className="pt-4 border-t border-gray-100">
-              <p className="text-xs text-gray-400 text-center">Larn English App v1.0</p>
-            </div>
           </div>
         </div>
-      </>
-    );
-  };
+      )}
 
-  // 1. Home Screen
-  if (screen === 'home') {
-    return (
-      <div className="min-h-screen bg-sky-100 flex flex-col items-center p-6 relative overflow-hidden font-sans">
-        {/* Background Elements */}
-        <div className="absolute top-10 left-10 text-white opacity-60 animate-bounce delay-700">
-          <Cloud size={80} fill="currentColor" />
-        </div>
-        <div className="absolute top-20 right-20 text-white opacity-40 animate-pulse">
-          <Cloud size={120} fill="currentColor" />
-        </div>
+      {/* หน้าเกม - แสดงคำศัพท์และรับคำตอบ */}
+      {screen === 'game' && currentUnit && (
+        <div className="flex-1 flex flex-col justify-center items-center p-4">
+          {/* ปุ่มกลับไปหน้าหลัก */}
+          <button onClick={goHome} className="self-start text-gray-500 hover:text-blue-600 transition-colors mb-4">
+            <ChevronLeft className="inline-block" /> กลับ
+          </button>
 
-        <div className="w-full max-w-4xl z-10 flex flex-col items-center">
-          {/* Header */}
-          <div className="mt-10 mb-12 text-center relative group cursor-default">
-            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500 tracking-tight drop-shadow-sm transform group-hover:scale-105 transition-transform duration-300">
-              Larn English
-            </h1>
-            <div className="absolute -top-6 -right-6 text-yellow-400 animate-spin-slow">
-              <Star size={48} fill="currentColor" />
-            </div>
-            <p className="text-xl text-blue-600 mt-4 font-bold thai-font bg-white/50 py-2 px-6 rounded-full inline-block backdrop-blur-sm">
-              มาเรียนภาษาอังกฤษกันเถอะ!
-            </p>
-          </div>
+          {/* แสดงคำศัพท์ปัจจุบัน */}
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-md flex flex-col items-center">
+            {/* ชื่อบทเรียน */}
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
+              {currentUnit.name}
+            </h2>
 
-          {/* Units Grid */}
-          <div className="w-full px-4 space-y-6">
-            {/* Bonus Unit Card */}
-            {units.length > 0 && (
-              <div
-                onClick={() => startGame(createBonusUnit(units, 20))}
-                className="bg-gradient-to-br from-amber-400 via-orange-400 to-red-400 text-white rounded-3xl p-6 shadow-2xl cursor-pointer hover:scale-[1.02] transition-all duration-300 border-4 border-amber-300 relative overflow-hidden group"
-              >
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-16 translate-x-16"></div>
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-12 -translate-x-12"></div>
-                </div>
-
-                {/* Content */}
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <Trophy className="text-yellow-200" size={36} />
-                      <h3 className="text-2xl font-bold">Bonus: ทบทวนทั้งหมด</h3>
-                    </div>
-                    <Star className="text-yellow-200 animate-pulse" size={32} fill="currentColor" />
-                  </div>
-
-                  <p className="text-amber-50 text-sm mb-3">
-                    สุ่มคำศัพท์จากทุก Unit มา 20 ข้อเพื่อทบทวน
-                  </p>
-
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="bg-white/20 px-3 py-1.5 rounded-full backdrop-blur font-bold">
-                      📚 {units.reduce((sum, u) => sum + (u.items?.length || 0), 0)} คำทั้งหมด
-                    </span>
-                    <span className="bg-white/20 px-3 py-1.5 rounded-full backdrop-blur font-bold">
-                      🎲 สุ่ม 20 ข้อ
-                    </span>
-                  </div>
-                </div>
-
-                {/* Shine Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              </div>
+            {/* แสดงภาพคำศัพท์ (ถ้ามี) */}
+            {vocabList[currentIndex]?.img && (
+              <WordImage word={vocabList[currentIndex].en} imgUrl={vocabList[currentIndex].img} />
             )}
 
-            {/* Regular Units Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {units.map((unit, index) => (
-                <button
-                  key={index}
-                  onClick={() => startGame(unit)}
-                  className="group relative bg-white rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-b-8 border-blue-100 active:border-b-0 active:translate-y-1 overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <BookOpen size={100} className="text-blue-500" />
-                  </div>
-                  <div className="flex flex-col items-start relative z-10">
-                    <div className="w-16 h-16 rounded-2xl bg-blue-100 text-blue-500 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300 shadow-sm">
-                      <span className="text-2xl font-black">{index + 1}</span>
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-800 mb-1">{unit.name}</h3>
-                    <p className="text-gray-500 thai-font">{(unit.items || unit.words || []).length} คำศัพท์</p>
-
-                    <div className="mt-6 w-full flex justify-end">
-                      <div className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg group-hover:bg-blue-600 transition-colors">
-                        <Play size={24} fill="currentColor" />
-                      </div>
-                    </div>
-                  </div>
-                </button>
+            {/* กล่องแสดงตัวอักษรคำศัพท์ */}
+            <div className="grid grid-cols-3 gap-2 w-full mt-4">
+              {currentInput.split('').map((char, idx) => (
+                <LetterBox key={idx} letter={char} status={''} sizeClass="h-14" />
               ))}
             </div>
+
+            {/* ปุ่มกดตัวอักษรบนคีย์บอร์ด */}
+            <Keyboard
+              onKeyPress={(key) => {
+                if (gameStatus !== 'playing') return;
+                if (key === 'CLEAR') {
+                  setCurrentInput("");
+                  return;
+                } else if (key === 'DELETE') {
+                  setCurrentInput(currentInput.slice(0, -1));
+                  return;
+                } else if (key === 'SHIFT') {
+                  setIsShiftActive(!isShiftActive);
+                  return;
+                } else if (key === 'SPACE') {
+                  // Handle space separately if needed
+                  return;
+                }
+
+                // Add the pressed character to the current input
+                setCurrentInput(prev => prev + (isShiftActive ? key.toUpperCase() : key));
+                playKeySound();
+              }}
+              playKeySound={playKeySound}
+              isShiftActive={isShiftActive}
+            />
+
+            {/* ปุ่มตรวจสอบคำตอบ */}
+            <button onClick={() => {}} className="mt-4 w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all active:scale-95">
+              ตรวจสอบคำตอบ
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Collapsible Navigation */}
-        <CollapsibleNav />
+      {/* หน้าแรก - แสดงรายชื่อบทเรียน */}
+      {screen === 'home' && (
+        <div className="flex-1 flex flex-col justify-center items-center p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-md flex flex-col items-center">
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
+              เลือกบทเรียน
+            </h2>
 
-        {/* Admin Modal */}
-        {isAdminOpen && (
-          <AdminPanel
-            units={units}
-            onSave={saveSettings}
-            onCancel={() => setIsAdminOpen(false)}
-            voices={voices}
-            voicePrefs={voicePrefs}
-            setVoicePrefs={setVoicePrefs}
-            saveVoicePrefs={saveVoicePrefs}
-          />
-        )}
+            {/* แสดงรายชื่อบทเรียนที่โหลดจาก CSV */}
+            <div className="w-full space-y-2">
+              {units.map((unit, idx) => (
+                <div key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl shadow-sm">
+                  <div className="flex-1">
+                    <div className="text-gray-700 font-semibold">{unit.name}</div>
+                    <div className="text-xs text-gray-400">{(unit.items || []).length} คำศัพท์</div>
+                  </div>
+                  <button onClick={() => startGame(unit)} className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-md hover:bg-blue-700 transition-all active:scale-95">
+                    เริ่มเล่น
+                  </button>
+                </div>
+              ))}
+            </div>
 
-        {/* Error Modal */}
+            {/* ปุ่มเพิ่มบทเรียนใหม่ */}
+            <button onClick={() => setIsAdminOpen(true)} className="mt-6 w-full py-3 bg-green-600 text-white rounded-xl font-bold shadow-lg hover:bg-green-700 transition-all active:scale-95">
+              <Plus size={20} className="mr-2" /> บทเรียนใหม่
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* สรุปผลการเรียนรู้ - แสดงเมื่อจบเกม */}
+      {screen === 'summary' && (
+        <SummaryScreen
+          vocabList={vocabList}
+          onRestart={() => {
+            setScreen('game');
+            setCurrentIndex(0);
+            setCurrentInput("");
+            setScore(0);
+            setGameStatus('playing');
+          }}
+          onBackToMenu={goHome}
+        />
+      )}
+
+      {/* โมดัลแสดงข้อผิดพลาด */}
+      {errorModal.isOpen && (
         <ErrorModal
           isOpen={errorModal.isOpen}
           onClose={() => setErrorModal({ isOpen: false, title: '', message: '' })}
           title={errorModal.title}
           message={errorModal.message}
         />
-      </div>
-    );
-  }
+      )}
 
-  // 2. Summary Screen
-  if (screen === 'summary') {
-    return (
-      <SummaryScreen
-        stats={wordStats}
-        unitName={currentUnit?.name || 'Unit'}
-        onRestart={() => startGame(currentUnit)}
-        onGoHome={goHome}
-      />
-    );
-  }
-
-  // 3. Game Screen
-  const currentWord = vocabList[currentIndex];
-
-  return (
-    <div className="min-h-screen bg-sky-50 flex flex-col items-center pb-80 relative overflow-hidden font-sans">
-      <style>{`
-        body { font-family: 'Baloo 2 Local', 'Baloo 2', sans-serif; }
-        .thai-font { font-family: 'Sarabun Local', 'Sarabun', sans-serif; }
-        .shake { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both; }
-        @keyframes shake {
-          10%,90% { transform: translate3d(-1px, 0, 0); }
-          20%,80% { transform: translate3d(2px, 0, 0); }
-          30%,50%,70% { transform: translate3d(-4px, 0, 0); }
-          40%,60% { transform: translate3d(4px, 0, 0); }
-        }
-        .bounce { animation: bounce 0.5s infinite alternate; }
-        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        @keyframes firework {
-          0% { transform: translate(0, 0) scale(0) rotate(var(--rot)); opacity: 1; }
-          50% { opacity: 1; }
-          100% { transform: translate(var(--tx), calc(var(--ty) + 20vh)) scale(1) rotate(calc(var(--rot) + 720deg)); opacity: 0; }
-        }
-        .animate-firework { animation: firework 1.2s ease-out forwards; }
-        @keyframes launch {
-          0% { top: 105%; opacity: 1; transform: scaleY(2); }
-          50% { opacity: 1; }
-          100% { top: var(--target-y); opacity: 0; transform: scaleY(0.5); }
-        }
-        .animate-launch { animation: launch 0.6s ease-out forwards; }
-        @keyframes rain {
-          0% { transform: translateY(0); opacity: 0.7; }
-          100% { transform: translateY(200px); opacity: 0; }
-        }
-        .animate-rain { animation: rain 0.8s ease-in forwards; }
-      `}</style>
-
-      <ParticleSystem type={particleType} />
-
-      {/* Navbar */}
-      <div className="w-full bg-white shadow-sm p-4 flex justify-between items-center z-20 px-4 md:px-8 sticky top-0">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={goHome}
-            className="flex items-center justify-center w-10 h-10 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-            title="กลับหน้าหลัก"
-          >
-            <ChevronLeft size={24} />
-          </button>
-
-          <button
-            onClick={() => {
-              const newLang = systemVoiceLang === 'th' ? 'en' : 'th';
-              setSystemVoiceLang(newLang);
-              localStorage.setItem('systemVoiceLang', newLang);
-            }}
-            className="flex items-center justify-center gap-1.5 px-3 h-10 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 text-purple-600 rounded-xl transition-all font-bold text-sm border-2 border-purple-200"
-            title={systemVoiceLang === 'th' ? 'เปลี่ยนเป็นภาษาอังกฤษ' : 'Switch to Thai'}
-          >
-            <Volume2 size={16} />
-            <span className="uppercase">{systemVoiceLang}</span>
-          </button>
-        </div>
-        <h2 className="text-xl font-bold text-gray-800 truncate max-w-[40%]">{currentUnit?.name}</h2>
-        <div className="bg-yellow-100 px-4 py-2 rounded-full flex items-center gap-2 border border-yellow-200">
-          <Star className="text-yellow-500 fill-current" size={20} />
-          <span className="font-bold text-yellow-700">{score}</span>
-        </div>
-      </div>
-
-      <div className="w-full max-w-2xl px-4 flex-1 flex flex-col items-center justify-start relative z-10 py-4 h-[calc(100vh-80px)] overflow-hidden">
-
-        {/* Unified Card - Flexible Height */}
-        <div className="w-full bg-white rounded-3xl shadow-xl overflow-hidden mb-4 shrink-1 flex flex-col animate-fade-in max-h-[60vh]">
-          {/* Image Section (Top) */}
-          <WordImage word={currentWord?.en} imgUrl={currentWord?.img} />
-
-          {/* Info Section (Bottom) */}
-          <div className="p-3 flex items-center justify-between border-t border-gray-100 shrink-0">
-            <div>
-              <p className="text-gray-400 text-[10px] font-bold mb-0.5">คำศัพท์ภาษาไทย:</p>
-              <h3 className="text-3xl font-bold text-gray-800 thai-font">{currentWord?.th}</h3>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => speak(currentWord?.en)}
-                className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center hover:bg-blue-100 transition-colors"
-                title="ฟังเสียง"
-              >
-                <Volume2 size={24} />
-              </button>
-              <button
-                onClick={() => {
-                  // Spell it out
-                  const spelling = (currentWord?.en || '').split('').join('. ');
-                  speak(spelling, 'en-US', { rate: 0.8 });
-                }}
-                className="w-12 h-12 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center hover:bg-purple-100 transition-colors"
-                title="สะกดคำ"
-              >
-                <SpellCheck size={24} />
-              </button>
-              <button
-                onClick={() => setShowHint(true)}
-                className="w-12 h-12 bg-yellow-50 text-yellow-500 rounded-xl flex items-center justify-center hover:bg-yellow-100 transition-colors"
-                title="คำใบ้"
-              >
-                <Lightbulb size={24} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Hint - Moved to top */}
-        {showHint && (
-          <div className="mb-2 text-blue-400 font-bold animate-fade-in text-lg">
-            Hint: {(currentWord?.en || '').charAt(0)}...
-          </div>
-        )}
-
-        {/* Word Display */}
-        <div className="w-full mb-4 overflow-x-auto scrollbar-hide word-display-container">
-          <div className="flex items-center gap-1 sm:gap-2 px-4 min-w-fit mx-auto justify-center">
-            {(currentWord?.en || '').split('').map((char, index) => {
-              let status = 'neutral';
-              if (index < currentInput.length) {
-                // Only reveal status if game is NOT playing (meaning we checked logic)
-                if (gameStatus === 'correct' || gameStatus === 'wrong') {
-                  status = currentInput[index].toLowerCase() === char.toLowerCase() ? 'correct' : 'wrong';
-                }
-              }
-
-              // Calculate responsive size based on word length
-              const wordLength = currentWord?.en.length || 0;
-              let sizeClass = '';
-
-              if (wordLength <= 5) {
-                // Short words: large boxes
-                sizeClass = 'w-12 h-14 sm:w-16 sm:h-20 md:w-20 md:h-24 text-2xl sm:text-4xl';
-              } else if (wordLength <= 8) {
-                // Medium words: medium boxes
-                sizeClass = 'w-10 h-12 sm:w-14 sm:h-16 md:w-16 md:h-20 text-xl sm:text-3xl';
-              } else if (wordLength <= 12) {
-                // Long words: small boxes
-                sizeClass = 'w-8 h-10 sm:w-12 sm:h-14 md:w-14 md:h-16 text-lg sm:text-2xl';
-              } else {
-                // Very long words: extra small boxes
-                sizeClass = 'w-7 h-9 sm:w-10 sm:h-12 md:w-12 md:h-14 text-base sm:text-xl';
-              }
-
-              // Override for space - make it wider
-              const isSpace = char === ' ';
-              if (isSpace) {
-                if (wordLength <= 8) {
-                  sizeClass = 'w-14 h-12 sm:w-20 sm:h-16 md:w-24 md:h-20 text-xl sm:text-3xl';
-                } else {
-                  sizeClass = 'w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 text-lg sm:text-2xl';
-                }
-              }
-
-              return (
-                <LetterBox
-                  key={index}
-                  letter={index < currentInput.length ? currentInput[index] : ''}
-                  status={status}
-                  sizeClass={sizeClass}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Feedback Messages */}
-        {gameStatus === 'correct' && (
-          <div className="text-green-500 font-bold text-xl thai-font flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-lg border border-green-100 animate-fade-in z-[60] relative">
-            <CheckCircle size={28} /> ถูกต้อง! เก่งมาก
-          </div>
-        )}
-        {gameStatus === 'wrong' && (
-          <div className="text-red-500 font-bold text-xl thai-font flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-lg border border-red-100 animate-fade-in z-[60] relative">
-            <XCircle size={28} /> ผิดจ้า ลองใหม่นะ
-          </div>
-        )}
-      </div>
-
-      <Keyboard onKeyPress={handleKeyPress} playKeySound={playKeySound} isShiftActive={isShiftActive} />
-
-      {/* Error Modal */}
-      <ErrorModal
-        isOpen={errorModal.isOpen}
-        onClose={() => setErrorModal({ isOpen: false, title: '', message: '' })}
-        title={errorModal.title}
-        message={errorModal.message}
-      />
+      {/* เบลอพื้นหลังเมื่อมีโมดัลเปิดอยู่ */}
+      {(isAdminOpen || errorModal.isOpen) && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"></div>
+      )}
     </div>
   );
 }
-
-// Play start sound when a unit is selected
-const playStartSound = () => {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-
-    const ctx = new AudioContext();
-
-    // Ensure AudioContext is not suspended
-    if (ctx.state === 'suspended') {
-      ctx.resume();
-    }
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    const now = ctx.currentTime;
-
-    // Start sound: simple tone
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(440, now);
-
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-
-    osc.start(now);
-    osc.stop(now + 0.5);
-  } catch (e) {
-    console.error("Audio FX error", e);
-  }
-};
