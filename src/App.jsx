@@ -750,28 +750,19 @@ export default function App() {
     }
   };
 
-  // Function to play text-to-speech
-  const playTextToSpeech = (text, lang) => {
-    try {
-      if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  // Unlock audio for mobile browsers
+  const unlockAudioContext = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      // Cancel any pending speech
+      window.speechSynthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = lang;
-
-      const voice = voices.find(v => v.lang === lang);
-      if (voice) {
-        utterance.voice = voice;
-      }
-
+      // Create and speak a silent utterance to unlock
+      const utterance = new SpeechSynthesisUtterance('');
+      utterance.volume = 0;
       window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.error("Text-to-speech error", e);
-    }
-  };
 
-  // Example usage: Play text-to-speech when a word is selected
-  const onWordSelect = (word, lang) => {
-    playTextToSpeech(word, lang);
+      console.log('🔓 Audio context unlocked');
+    }
   };
 
   // --- Helpers / Actions ---
@@ -807,6 +798,8 @@ export default function App() {
     setWordStats([]);
     setStartTime(Date.now());
     setAttempts(0);
+    // Unlock audio for mobile browsers
+    unlockAudioContext();
     // announce unit then the first word
     try { setTimeout(() => { speak(`เริ่ม ${unit?.name || 'บทเรียน'}`, 'th-TH', { interrupt: true }); }, 200); } catch (e) { }
   };
