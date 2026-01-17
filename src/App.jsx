@@ -750,6 +750,30 @@ export default function App() {
     }
   };
 
+  // Function to play text-to-speech
+  const playTextToSpeech = (text, lang) => {
+    try {
+      if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+
+      const voice = voices.find(v => v.lang === lang);
+      if (voice) {
+        utterance.voice = voice;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.error("Text-to-speech error", e);
+    }
+  };
+
+  // Example usage: Play text-to-speech when a word is selected
+  const onWordSelect = (word, lang) => {
+    playTextToSpeech(word, lang);
+  };
+
   // --- Helpers / Actions ---
   const createBonusUnit = (units, count = 20) => {
     // รวบรวมคำศัพท์จากทุก unit
