@@ -897,6 +897,10 @@ export default function App() {
       if (shouldInterrupt) {
         try { window.speechSynthesis.cancel(); } catch (e) { }
       }
+
+      // Resume for mobile (iOS requires this)
+      try { window.speechSynthesis.resume(); } catch (e) { }
+
       window.speechSynthesis.speak(u);
     } catch (e) {
       // ignore if not available
@@ -913,7 +917,7 @@ export default function App() {
       }, 500);
       return () => clearTimeout(tid);
     }
-  }, [currentIndex, screen, vocabList, voices, speak]); // Added speak to dependencies
+  }, [currentIndex, screen, vocabList, voices]); // Removed speak to prevent re-triggering
 
   // Auto-hide hint after 5 seconds
   useEffect(() => {
@@ -928,12 +932,23 @@ export default function App() {
   // Unlock audio on mobile devices
   useEffect(() => {
     const unlockAudio = () => {
-      if (!audioUnlocked) {
-        // Create a silent utterance to unlock audio
-        const utterance = new SpeechSynthesisUtterance('');
-        utterance.volume = 0;
-        window.speechSynthesis.speak(utterance);
-        setAudioUnlocked(true);
+      if (!audioUnlocked && typeof window !== 'undefined' && window.speechSynthesis) {
+        try {
+          // Resume speech synthesis (required for iOS)
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.resume();
+
+          // Create a silent utterance to unlock audio
+          const utterance = new SpeechSynthesisUtterance(' ');
+          utterance.volume = 0.01; // Very quiet but not 0
+          utterance.rate = 10; // Very fast
+          window.speechSynthesis.speak(utterance);
+
+          setAudioUnlocked(true);
+          console.log('Audio unlocked for mobile');
+        } catch (e) {
+          console.error('Failed to unlock audio:', e);
+        }
       }
     };
 
@@ -941,11 +956,16 @@ export default function App() {
     document.addEventListener('touchstart', unlockAudio, { once: true });
     document.addEventListener('click', unlockAudio, { once: true });
 
+    // Also try to unlock when entering game screen
+    if (screen === 'game') {
+      unlockAudio();
+    }
+
     return () => {
       document.removeEventListener('touchstart', unlockAudio);
       document.removeEventListener('click', unlockAudio);
     };
-  }, [audioUnlocked]);
+  }, [audioUnlocked, screen]);
 
   // --- Game Logic ---
   const handleKeyPress = (key) => {
