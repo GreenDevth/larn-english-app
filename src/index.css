@@ -308,3 +308,53 @@ body {
     right: 5%;
   }
 }
+
+/* Add styles for collapsible settings menu */
+.settings-menu {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  z-index: 10;
+}
+
+.settings-icon {
+  width: 40px;
+  height: 40px;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.settings-list {
+  display: none;
+  position: absolute;
+  top: 50px;
+  left: 0;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.settings-menu.open .settings-list {
+  display: block;
+}
+
+/* Hide scrollbar on mobile, show on desktop */
+@media (max-width: 768px) {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+  }
+}

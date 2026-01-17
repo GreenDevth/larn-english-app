@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, Lightbulb, Settings, Star, Trophy, Image as ImageIcon, Delete, Send, CheckCircle, XCircle, Cloud, BookOpen, ChevronLeft, Play, Plus, Trash2, Save, Edit, GripVertical, ChevronDown, ChevronRight, SpellCheck } from 'lucide-react';
+import { Volume2, Lightbulb, Settings, Star, Trophy, Image as ImageIcon, Delete, Send, CheckCircle, XCircle, Cloud, BookOpen, ChevronLeft, Play, Plus, Trash2, Save, Edit, GripVertical, ChevronDown, ChevronRight, SpellCheck, Menu, X } from 'lucide-react';
 import SummaryScreen from './components/SummaryScreen';
 
 // --- No hard-coded data - all vocab loaded from vocab.csv ---
@@ -268,7 +268,7 @@ const WordImage = ({ word, imgUrl }) => {
   );
 };
 
-const LetterBox = ({ letter, status }) => {
+const LetterBox = ({ letter, status, sizeClass }) => {
   let borderClass = "border-b-gray-300 bg-white text-gray-700";
 
   if (status === 'correct') {
@@ -277,14 +277,17 @@ const LetterBox = ({ letter, status }) => {
     borderClass = "border-b-red-500 bg-red-50 text-red-500 border-red-500";
   }
 
+  // Check if letter is a space
+  const isSpace = letter === ' ';
+
   return (
-    <div className={`w-10 h-12 sm:w-14 sm:h-16 md:w-16 md:h-20 border-2 border-b-4 rounded-xl flex items-center justify-center text-2xl sm:text-4xl font-bold transition-all duration-200 ${borderClass} shadow-sm mx-1`}>
-      {letter.toUpperCase()}
+    <div className={`${sizeClass} border-2 border-b-4 rounded-xl flex items-center justify-center font-bold transition-all duration-200 ${borderClass} shadow-sm`}>
+      {isSpace ? '␣' : letter.toUpperCase()}
     </div>
   );
 };
 
-const Keyboard = ({ onKeyPress, playKeySound }) => {
+const Keyboard = ({ onKeyPress, playKeySound, isShiftActive }) => {
   const rows = [
     ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
     ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
@@ -292,14 +295,14 @@ const Keyboard = ({ onKeyPress, playKeySound }) => {
   ];
 
   return (
-    <div className="w-full max-w-2xl bg-white/95 backdrop-blur rounded-t-3xl shadow-[0_-10px_40px_-5px_rgba(0,0,0,0.1)] p-3 sm:p-6 fixed bottom-0 left-0 right-0 mx-auto z-50 pb-safe animate-slide-up border-t border-gray-100">
+    <div className="w-full max-w-xl bg-white/95 backdrop-blur rounded-t-3xl shadow-[0_-10px_40px_-5px_rgba(0,0,0,0.1)] p-3 sm:p-6 fixed bottom-0 left-0 right-0 mx-auto z-50 pb-safe animate-slide-up border-t border-gray-100">
       {/* แถวที่ 1: Q-P (10 ปุ่ม) */}
       <div className="grid grid-cols-10 gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
         {rows[0].map((char) => (
           <button key={char} onClick={() => { playKeySound(); onKeyPress(char); }}
             className="aspect-square w-full bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 rounded-lg sm:rounded-xl font-bold text-base sm:text-lg shadow-[0_3px_0_rgb(219,234,254)] active:shadow-none active:translate-y-[2px] transition-all uppercase border-2 border-blue-100 relative top-0 active:top-[2px] flex items-center justify-center"
           >
-            {char}
+            {isShiftActive ? char.toUpperCase() : char}
           </button>
         ))}
       </div>
@@ -311,7 +314,7 @@ const Keyboard = ({ onKeyPress, playKeySound }) => {
           <button key={char} onClick={() => { playKeySound(); onKeyPress(char); }}
             className="aspect-square w-full bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 rounded-lg sm:rounded-xl font-bold text-base sm:text-lg shadow-[0_3px_0_rgb(219,234,254)] active:shadow-none active:translate-y-[2px] transition-all uppercase border-2 border-blue-100 relative top-0 active:top-[2px] flex items-center justify-center"
           >
-            {char}
+            {isShiftActive ? char.toUpperCase() : char}
           </button>
         ))}
       </div>
@@ -324,7 +327,7 @@ const Keyboard = ({ onKeyPress, playKeySound }) => {
           <button key={char} onClick={() => { playKeySound(); onKeyPress(char); }}
             className="aspect-square w-full bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 rounded-lg sm:rounded-xl font-bold text-base sm:text-lg shadow-[0_3px_0_rgb(219,234,254)] active:shadow-none active:translate-y-[2px] transition-all uppercase border-2 border-blue-100 relative top-0 active:top-[2px] flex items-center justify-center"
           >
-            {char}
+            {isShiftActive ? char.toUpperCase() : char}
           </button>
         ))}
         <div className="col-span-1"></div> {/* Spacer ขวา */}
@@ -332,13 +335,30 @@ const Keyboard = ({ onKeyPress, playKeySound }) => {
 
       {/* ปุ่มควบคุม */}
       <div className="flex justify-center gap-2 sm:gap-3 px-2">
-        <button onClick={() => onKeyPress('CLEAR')}
-          className="flex-1 max-w-[160px] h-11 sm:h-12 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg font-bold shadow-[0_3px_0_rgb(255,237,213)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border border-orange-200 text-sm sm:text-base relative"
+        {/* ปุ่ม Shift */}
+        <button onClick={() => onKeyPress('SHIFT')}
+          className={`flex-1 max-w-[100px] h-11 sm:h-12 rounded-lg font-bold shadow-[0_3px_0_rgb(147,197,253)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border-2 text-sm sm:text-base relative transition-all ${isShiftActive
+            ? 'bg-blue-500 text-white border-blue-600'
+            : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-100'
+            }`}
         >
-          <XCircle size={16} className="mr-1.5" /> ล้างทั้งหมด
+          ⇧ Shift
+        </button>
+
+        {/* ปุ่ม Space */}
+        <button onClick={() => onKeyPress('SPACE')}
+          className="flex-1 max-w-[200px] h-11 sm:h-12 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg font-bold shadow-[0_3px_0_rgb(229,231,235)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border-2 border-gray-200 text-sm sm:text-base relative"
+        >
+          ␣ Space
+        </button>
+
+        <button onClick={() => onKeyPress('CLEAR')}
+          className="flex-1 max-w-[120px] h-11 sm:h-12 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg font-bold shadow-[0_3px_0_rgb(255,237,213)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border border-orange-200 text-sm sm:text-base relative"
+        >
+          <XCircle size={16} className="mr-1.5" /> ล้าง
         </button>
         <button onClick={() => onKeyPress('DELETE')}
-          className="flex-1 max-w-[140px] h-11 sm:h-12 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg font-bold shadow-[0_3px_0_rgb(254,202,202)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border border-red-100 text-sm sm:text-base relative"
+          className="flex-1 max-w-[100px] h-11 sm:h-12 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg font-bold shadow-[0_3px_0_rgb(254,202,202)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border border-red-100 text-sm sm:text-base relative"
         >
           <Delete size={16} className="mr-1.5" /> ลบ
         </button>
@@ -430,6 +450,8 @@ export default function App() {
   const [screen, setScreen] = useState('home'); // 'home', 'game'
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [csvInput, setCsvInput] = useState("");
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isShiftActive, setIsShiftActive] = useState(false);
 
   // Game State
   const [vocabList, setVocabList] = useState([]);
@@ -892,13 +914,29 @@ export default function App() {
     }
   }, [currentIndex, screen, vocabList, voices]); // Removed voicePrefs to prevent re-triggering during pref change
 
+  // Auto-hide hint after 5 seconds
+  useEffect(() => {
+    if (showHint) {
+      const timer = setTimeout(() => {
+        setShowHint(false);
+      }, 5000); // 5 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [showHint]);
+
   // --- Game Logic ---
   const handleKeyPress = (key) => {
     if (gameStatus !== 'playing' && gameStatus !== 'wrong') return;
 
+    if (key === 'SHIFT') {
+      setIsShiftActive(prev => !prev);
+      return;
+    }
+
     if (key === 'CLEAR') {
       setCurrentInput('');
       setGameStatus('playing');
+      setIsShiftActive(false); // Reset shift when clearing
       return;
     }
 
@@ -909,6 +947,23 @@ export default function App() {
       return;
     }
 
+    if (key === 'SPACE') {
+      const currentWord = vocabList[currentIndex];
+      const maxLen = currentWord?.en.length || 0;
+
+      if (currentInput.length < maxLen) {
+        const newInput = currentInput + ' ';
+        setCurrentInput(newInput);
+        setGameStatus('playing');
+
+        // Auto-check if full length reached
+        if (newInput.length === maxLen) {
+          checkAnswer(newInput);
+        }
+      }
+      return;
+    }
+
     // Play letter sound REMOVED (User request)
     // speak(key, 'en-US', { rate: 1.2, interrupt: true });
 
@@ -916,9 +971,14 @@ export default function App() {
     const maxLen = currentWord?.en.length || 0;
 
     if (currentInput.length < maxLen) {
-      const newInput = currentInput + key.toLowerCase();
+      // Apply shift if active
+      const charToAdd = isShiftActive ? key.toUpperCase() : key.toLowerCase();
+      const newInput = currentInput + charToAdd;
       setCurrentInput(newInput);
       setGameStatus('playing');
+
+      // Turn off shift after typing a letter (like real keyboard)
+      setIsShiftActive(false);
 
       // Auto-check if full length reached
       if (newInput.length === maxLen) {
@@ -983,6 +1043,128 @@ export default function App() {
 
   // --- Screens ---
 
+  // Collapsible Nav Component
+  const CollapsibleNav = () => {
+    return (
+      <>
+        {/* Hamburger Button */}
+        <button
+          onClick={() => setIsNavOpen(!isNavOpen)}
+          className="fixed top-4 left-4 z-[70] w-12 h-12 bg-white hover:bg-blue-50 text-blue-600 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+          title={isNavOpen ? 'ปิดเมนู' : 'เปิดเมนู'}
+        >
+          {isNavOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Backdrop */}
+        {isNavOpen && (
+          <div
+            onClick={() => setIsNavOpen(false)}
+            className="fixed inset-0 bg-black/30 z-[60] backdrop-blur-sm animate-fade-in"
+          />
+        )}
+
+        {/* Slide-in Menu */}
+        <div
+          className={`fixed top-0 left-0 h-full w-72 bg-white shadow-2xl z-[65] transition-transform duration-300 ease-out ${isNavOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+        >
+          <div className="p-6 h-full flex flex-col">
+            {/* Header */}
+            <div className="mb-8 pb-4 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <Settings size={24} className="text-blue-500" />
+                ตั้งค่า
+              </h3>
+            </div>
+
+            {/* Menu Items */}
+            <div className="flex-1 space-y-3">
+              {/* ปุ่มสลับภาษาระบบ */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">ภาษาระบบ</label>
+                <button
+                  onClick={() => {
+                    const newLang = systemVoiceLang === 'th' ? 'en' : 'th';
+                    setSystemVoiceLang(newLang);
+                    localStorage.setItem('systemVoiceLang', newLang);
+                  }}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-bold"
+                >
+                  <span className="flex items-center gap-2">
+                    <Volume2 size={20} />
+                    {systemVoiceLang === 'th' ? 'ภาษาไทย' : 'English'}
+                  </span>
+                  <span className="text-xs bg-white/20 px-2 py-1 rounded">{systemVoiceLang.toUpperCase()}</span>
+                </button>
+              </div>
+
+              {/* ควบคุมระดับเสียง */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">ระดับเสียง</label>
+                <div className="space-y-3">
+                  {/* แสดงระดับเสียงปัจจุบัน */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all duration-300"
+                        style={{ width: `${volume}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-bold text-gray-700 w-12 text-right">{volume}%</span>
+                  </div>
+
+                  {/* ปุ่มปรับเสียง */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const newVolume = Math.max(0, volume - 10);
+                        setVolume(newVolume);
+                        localStorage.setItem('volume', newVolume.toString());
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-bold text-sm"
+                    >
+                      <Volume2 size={16} />
+                      ลดเสียง
+                    </button>
+                    <button
+                      onClick={() => {
+                        const newVolume = Math.min(100, volume + 10);
+                        setVolume(newVolume);
+                        localStorage.setItem('volume', newVolume.toString());
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-bold text-sm"
+                    >
+                      <Volume2 size={20} />
+                      เพิ่มเสียง
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* ปุ่มจัดการบทเรียน */}
+              <button
+                onClick={() => {
+                  setIsAdminOpen(true);
+                  setIsNavOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-bold"
+              >
+                <Settings size={20} />
+                จัดการบทเรียน
+              </button>
+            </div>
+
+            {/* Footer */}
+            <div className="pt-4 border-t border-gray-100">
+              <p className="text-xs text-gray-400 text-center">Larn English App v1.0</p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
+
   // 1. Home Screen
   if (screen === 'home') {
     return (
@@ -1007,57 +1189,6 @@ export default function App() {
             <p className="text-xl text-blue-600 mt-4 font-bold thai-font bg-white/50 py-2 px-6 rounded-full inline-block backdrop-blur-sm">
               มาเรียนภาษาอังกฤษกันเถอะ!
             </p>
-
-            {/* ปุ่มควบคุมเสียงและการตั้งค่า */}
-            <div className="absolute top-1/2 -right-16 md:-right-24 flex flex-col gap-2">
-              {/* ปุ่มสลับภาษา */}
-              <button
-                onClick={() => {
-                  const newLang = systemVoiceLang === 'th' ? 'en' : 'th';
-                  setSystemVoiceLang(newLang);
-                  localStorage.setItem('systemVoiceLang', newLang);
-                }}
-                className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center font-bold text-xs"
-                title={systemVoiceLang === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นไทย'}
-              >
-                {systemVoiceLang.toUpperCase()}
-              </button>
-
-              {/* ปุ่มเพิ่มเสียง */}
-              <button
-                onClick={() => {
-                  const newVolume = Math.min(100, volume + 10);
-                  setVolume(newVolume);
-                  localStorage.setItem('volume', newVolume.toString());
-                }}
-                className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-                title="เพิ่มเสียง"
-              >
-                <Volume2 size={20} />
-              </button>
-
-              {/* ปุ่มลดเสียง */}
-              <button
-                onClick={() => {
-                  const newVolume = Math.max(0, volume - 10);
-                  setVolume(newVolume);
-                  localStorage.setItem('volume', newVolume.toString());
-                }}
-                className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-                title="ลดเสียง"
-              >
-                <Volume2 size={16} />
-              </button>
-
-              {/* ปุ่ม Settings */}
-              <button
-                onClick={() => setIsAdminOpen(true)}
-                className="w-12 h-12 bg-gray-100 hover:bg-blue-100 text-gray-400 hover:text-blue-500 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-                title="ตั้งค่า"
-              >
-                <Settings size={20} />
-              </button>
-            </div>
           </div>
 
           {/* Units Grid */}
@@ -1132,6 +1263,9 @@ export default function App() {
             </div>
           </div>
         </div>
+
+        {/* Collapsible Navigation */}
+        <CollapsibleNav />
 
         {/* Admin Modal */}
         {isAdminOpen && (
@@ -1285,43 +1419,79 @@ export default function App() {
           </div>
         </div>
 
-        {/* Word Display */}
-        <div className="flex justify-center flex-wrap gap-2 mb-8">
-          {(currentWord?.en || '').split('').map((char, index) => {
-            let status = 'neutral';
-            if (index < currentInput.length) {
-              // Only reveal status if game is NOT playing (meaning we checked logic)
-              if (gameStatus === 'correct' || gameStatus === 'wrong') {
-                status = currentInput[index].toLowerCase() === char.toLowerCase() ? 'correct' : 'wrong';
-              }
-            }
-            return (
-              <LetterBox key={index} letter={index < currentInput.length ? currentInput[index] : ''} status={status} />
-            );
-          })}
-        </div>
-
-        {/* Hint */}
+        {/* Hint - Moved to top */}
         {showHint && (
-          <div className="mb-4 text-blue-400 font-bold animate-fade-in">
-            Hint: {currentWord?.en}
+          <div className="mb-2 text-blue-400 font-bold animate-fade-in text-lg">
+            Hint: {(currentWord?.en || '').charAt(0)}...
           </div>
         )}
 
+        {/* Word Display */}
+        <div className="w-full mb-4 overflow-x-auto scrollbar-hide word-display-container">
+          <div className="flex items-center gap-1 sm:gap-2 px-4 min-w-fit mx-auto justify-center">
+            {(currentWord?.en || '').split('').map((char, index) => {
+              let status = 'neutral';
+              if (index < currentInput.length) {
+                // Only reveal status if game is NOT playing (meaning we checked logic)
+                if (gameStatus === 'correct' || gameStatus === 'wrong') {
+                  status = currentInput[index].toLowerCase() === char.toLowerCase() ? 'correct' : 'wrong';
+                }
+              }
+
+              // Calculate responsive size based on word length
+              const wordLength = currentWord?.en.length || 0;
+              let sizeClass = '';
+
+              if (wordLength <= 5) {
+                // Short words: large boxes
+                sizeClass = 'w-12 h-14 sm:w-16 sm:h-20 md:w-20 md:h-24 text-2xl sm:text-4xl';
+              } else if (wordLength <= 8) {
+                // Medium words: medium boxes
+                sizeClass = 'w-10 h-12 sm:w-14 sm:h-16 md:w-16 md:h-20 text-xl sm:text-3xl';
+              } else if (wordLength <= 12) {
+                // Long words: small boxes
+                sizeClass = 'w-8 h-10 sm:w-12 sm:h-14 md:w-14 md:h-16 text-lg sm:text-2xl';
+              } else {
+                // Very long words: extra small boxes
+                sizeClass = 'w-7 h-9 sm:w-10 sm:h-12 md:w-12 md:h-14 text-base sm:text-xl';
+              }
+
+              // Override for space - make it wider
+              const isSpace = char === ' ';
+              if (isSpace) {
+                if (wordLength <= 8) {
+                  sizeClass = 'w-14 h-12 sm:w-20 sm:h-16 md:w-24 md:h-20 text-xl sm:text-3xl';
+                } else {
+                  sizeClass = 'w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 text-lg sm:text-2xl';
+                }
+              }
+
+              return (
+                <LetterBox
+                  key={index}
+                  letter={index < currentInput.length ? currentInput[index] : ''}
+                  status={status}
+                  sizeClass={sizeClass}
+                />
+              );
+            })}
+          </div>
+        </div>
+
         {/* Feedback Messages */}
         {gameStatus === 'correct' && (
-          <div className="text-green-500 font-bold text-xl thai-font flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-lg border border-green-100 animate-fade-in">
+          <div className="text-green-500 font-bold text-xl thai-font flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-lg border border-green-100 animate-fade-in z-[60] relative">
             <CheckCircle size={28} /> ถูกต้อง! เก่งมาก
           </div>
         )}
         {gameStatus === 'wrong' && (
-          <div className="text-red-500 font-bold text-xl thai-font flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-lg border border-red-100 animate-fade-in">
+          <div className="text-red-500 font-bold text-xl thai-font flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-lg border border-red-100 animate-fade-in z-[60] relative">
             <XCircle size={28} /> ผิดจ้า ลองใหม่นะ
           </div>
         )}
       </div>
 
-      <Keyboard onKeyPress={handleKeyPress} playKeySound={playKeySound} />
+      <Keyboard onKeyPress={handleKeyPress} playKeySound={playKeySound} isShiftActive={isShiftActive} />
 
       {/* Error Modal */}
       <ErrorModal
