@@ -334,34 +334,29 @@ const Keyboard = ({ onKeyPress, playKeySound, isShiftActive }) => {
         <div className="col-span-1"></div> {/* Spacer ขวา */}
       </div>
 
-      {/* ปุ่มควบคุม */}
-      <div className="flex justify-center gap-2 sm:gap-3 px-2">
-        {/* ปุ่ม Shift */}
-        <button onClick={() => onKeyPress('SHIFT')}
-          className={`flex-1 max-w-[100px] h-11 sm:h-12 rounded-lg font-bold shadow-[0_3px_0_rgb(147,197,253)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border-2 text-sm sm:text-base relative transition-all ${isShiftActive
-            ? 'bg-blue-500 text-white border-blue-600'
-            : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-100'
-            }`}
-        >
-          ⇧ Shift
-        </button>
-
-        {/* ปุ่ม Space */}
-        <button onClick={() => onKeyPress('SPACE')}
-          className="flex-1 max-w-[200px] h-11 sm:h-12 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg font-bold shadow-[0_3px_0_rgb(229,231,235)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border-2 border-gray-200 text-sm sm:text-base relative"
-        >
-          ␣ Space
-        </button>
-
+      {/* ปุ่มควบคุม NEW LAYOUT: Clear | Space | Delete */}
+      <div className="flex justify-center gap-3 sm:gap-4 px-2">
+        {/* ปุ่ม Clear (ย้ายมาแทน Shift) */}
         <button onClick={() => onKeyPress('CLEAR')}
-          className="flex-1 max-w-[120px] h-11 sm:h-12 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg font-bold shadow-[0_3px_0_rgb(255,237,213)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border border-orange-200 text-sm sm:text-base relative"
+          className="flex-none w-20 sm:w-24 h-11 sm:h-12 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg font-bold shadow-[0_3px_0_rgb(255,237,213)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border-2 border-orange-100 text-sm sm:text-base relative transition-all"
         >
-          <XCircle size={16} className="mr-1.5" /> ล้าง
+          <XCircle size={20} />
+          <span className="ml-1">ล้าง</span>
         </button>
-        <button onClick={() => onKeyPress('DELETE')}
-          className="flex-1 max-w-[100px] h-11 sm:h-12 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg font-bold shadow-[0_3px_0_rgb(254,202,202)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border border-red-100 text-sm sm:text-base relative"
+
+        {/* ปุ่ม Space (ขยายใหญ่ขึ้น) */}
+        <button onClick={() => onKeyPress('SPACE')}
+          className="flex-1 max-w-[320px] h-11 sm:h-12 bg-white hover:bg-gray-50 text-gray-500 rounded-lg font-bold shadow-[0_3px_0_rgb(229,231,235)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border-2 border-gray-200 text-base sm:text-lg relative transition-all"
         >
-          <Delete size={16} className="mr-1.5" /> ลบ
+          <span className="mb-0.5">Space</span>
+        </button>
+
+        {/* ปุ่ม Delete */}
+        <button onClick={() => onKeyPress('DELETE')}
+          className="flex-none w-20 sm:w-24 h-11 sm:h-12 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg font-bold shadow-[0_3px_0_rgb(254,202,202)] active:translate-y-[2px] active:shadow-none flex items-center justify-center border-2 border-red-100 text-sm sm:text-base relative transition-all"
+        >
+          <Delete size={20} />
+          <span className="ml-1">ลบ</span>
         </button>
       </div>
     </div>
