@@ -1,6 +1,11 @@
 import React from 'react';
 import { Home, RotateCcw, BookOpen, Trophy, Clock, Target, Star } from 'lucide-react';
 
+// Function to display only the first word of a hint
+export const getFirstWord = (text) => {
+  return text.split(' ')[0];
+};
+
 const SummaryScreen = ({ stats, unitName, onRestart, onGoHome }) => {
     // Calculate summary statistics
     const totalWords = stats.length;
