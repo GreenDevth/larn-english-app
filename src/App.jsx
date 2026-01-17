@@ -620,7 +620,12 @@ export default function App() {
       if (!AudioContext) return;
 
       const ctx = new AudioContext();
-      // Simple synth sounds
+
+      // Ensure AudioContext is not suspended
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -629,7 +634,6 @@ export default function App() {
       const now = ctx.currentTime;
 
       if (type === 'correct') {
-        // Success Chime: C5 -> E5 -> G5 (fast arpeggio)
         osc.type = 'sine';
         osc.frequency.setValueAtTime(523.25, now);
         osc.frequency.setValueAtTime(659.25, now + 0.1);
@@ -641,7 +645,6 @@ export default function App() {
         osc.start(now);
         osc.stop(now + 0.6);
       } else if (type === 'wrong') {
-        // Error Buzz: Sawtooth, low pitch dropping
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(150, now);
         osc.frequency.linearRampToValueAtTime(100, now + 0.3);
