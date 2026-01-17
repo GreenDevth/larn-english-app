@@ -750,20 +750,25 @@ export default function App() {
     }
   };
 
-  // Unlock audio for mobile browsers
-  const unlockAudioContext = () => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      // Cancel any pending speech
-      window.speechSynthesis.cancel();
+  // Global unlock for Speech Synthesis on mobile
+  useEffect(() => {
+    const unlockSpeech = () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        // Try to resume speech synthesis
+        window.speechSynthesis.resume();
+        console.log('🔓 Speech synthesis unlocked');
+      }
+    };
 
-      // Create and speak a silent utterance to unlock
-      const utterance = new SpeechSynthesisUtterance('');
-      utterance.volume = 0;
-      window.speechSynthesis.speak(utterance);
+    // Listen for any user interaction
+    document.addEventListener('touchstart', unlockSpeech, { once: true, passive: true });
+    document.addEventListener('click', unlockSpeech, { once: true, passive: true });
 
-      console.log('🔓 Audio context unlocked');
-    }
-  };
+    return () => {
+      document.removeEventListener('touchstart', unlockSpeech);
+      document.removeEventListener('click', unlockSpeech);
+    };
+  }, []);
 
   // --- Helpers / Actions ---
   const createBonusUnit = (units, count = 20) => {
@@ -798,10 +803,8 @@ export default function App() {
     setWordStats([]);
     setStartTime(Date.now());
     setAttempts(0);
-    // Unlock audio for mobile browsers
-    unlockAudioContext();
-    // announce unit then the first word
-    try { setTimeout(() => { speak(`เริ่ม ${unit?.name || 'บทเรียน'}`, 'th-TH', { interrupt: true }); }, 200); } catch (e) { }
+    // Speak immediately for Chrome Android autoplay policy
+    try { speak(`เริ่ม ${unit?.name || 'บทเรียน'}`, 'th-TH', { interrupt: true }); } catch (e) { }
   };
 
   const goHome = () => {
