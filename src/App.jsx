@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Volume2, Lightbulb, Settings, Star, Trophy, Image as ImageIcon, Delete, Send, CheckCircle, XCircle, Cloud, BookOpen, ChevronLeft, Play, Plus, Trash2, Save, Edit, GripVertical, ChevronDown, ChevronRight, SpellCheck, Menu, X } from 'lucide-react';
 import SummaryScreen from './components/SummaryScreen';
 
+// Global utterance to prevent Chrome from garbage collecting it
+let globalUtterance = null;
+
 // --- Error Modal Component ---
 const ErrorModal = ({ isOpen, onClose, title, message }) => {
   if (!isOpen) return null;
@@ -917,56 +920,43 @@ export default function App() {
     return neutralVersion || femaleVersion; // default เป็นหญิงถ้าไม่ระบุ
   };
 
-  const speak = (text, lang, opts = {}) => {
+  const speak = (text, lang = 'en-US', opts = {}) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
     try {
-      const u = new SpeechSynthesisUtterance(String(text || ''));
-      if (lang) u.lang = lang;
-      u.rate = opts.rate || 0.95;
-      u.pitch = opts.pitch || 1;
-      u.volume = typeof opts.volume === 'number' ? opts.volume : (volume / 100);
-      const prefName = (voicePrefs && voicePrefs[lang]) || null;
-      let voiceToUse = null;
-      const langPrefix = (lang || '').toLowerCase().slice(0, 2);
+      // Clear old utterances
+      window.speechSynthesis.cancel();
 
-      if (prefName && voices && voices.length > 0) {
-        // Prefer an exact-name match that also supports the requested language prefix.
-        voiceToUse = voices.find(v => v.name === prefName && v.lang && v.lang.toLowerCase().startsWith(langPrefix))
-          // If exact-name+lang not found, fall back to exact-name (might be cross-lingual but better than nothing)
-          || voices.find(v => v.name === prefName) || null;
-        // If we found a pref but it's not ideal (language mismatch), prefer to ignore and pick a voice matching the language instead.
-        if (voiceToUse && voiceToUse.lang && !voiceToUse.lang.toLowerCase().startsWith(langPrefix)) {
-          // pick a voice matching the language; keep pref only if that's the only match
-          const langMatch = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(langPrefix));
-          if (langMatch) voiceToUse = langMatch;
-        }
-      }
-      // Allow caller to override voice directly via opts.voiceOverride
-      if (opts && opts.voiceOverride) {
-        voiceToUse = opts.voiceOverride;
-      }
+      // Use GLOBAL variable to prevent Chrome garbage collection
+      globalUtterance = new SpeechSynthesisUtterance(String(text || ''));
 
-      // If still not selected, ensure we have a candidate
-      if (!voiceToUse) voiceToUse = chooseVoiceForLang(lang) || null;
+      // Basic config
+      globalUtterance.lang = lang || 'en-US';
+      globalUtterance.rate = opts.rate || 1; // Normal speed
+      globalUtterance.pitch = opts.pitch || 1;
+      globalUtterance.volume = typeof opts.volume === 'number' ? opts.volume : (volume / 100);
 
-      if (voiceToUse) u.voice = voiceToUse;
+      // *** CRITICAL: DO NOT set .voice - let Chrome choose based on lang ***
+      // This is the key fix for Chrome Android!
 
-      // Default interrupt to true if not specified
-      const shouldInterrupt = opts.interrupt !== false;
-      if (shouldInterrupt) {
-        try { window.speechSynthesis.cancel(); } catch (e) { }
-      }
+      // Debug events
+      globalUtterance.onstart = () => console.log("▶️ Speech started:", text);
+      globalUtterance.onend = () => console.log("✅ Speech ended");
+      globalUtterance.onerror = (e) => {
+        console.error("❌ Speech error:", e.error, e);
+      };
 
-      // CRITICAL: Resume before speaking (required for mobile browsers)
+      // Resume if needed (for mobile)
       try {
         if (window.speechSynthesis.paused || window.speechSynthesis.pending) {
           window.speechSynthesis.resume();
         }
       } catch (e) { }
 
-      window.speechSynthesis.speak(u);
+      // Speak!
+      window.speechSynthesis.speak(globalUtterance);
     } catch (e) {
-      // ignore if not available
+      console.error('❌ speak() exception:', e);
     }
   };
 
