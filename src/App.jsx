@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Volume2, Lightbulb, Settings, Star, Trophy, Image as ImageIcon, Delete, Send, CheckCircle, XCircle, Cloud, BookOpen, ChevronLeft, Play, Plus, Trash2, Save, Edit, GripVertical, ChevronDown, ChevronRight, SpellCheck, Menu, X } from 'lucide-react';
 import SummaryScreen from './components/SummaryScreen';
 
-// --- No hard-coded data - all vocab loaded from vocab.csv ---
-
 // --- Error Modal Component ---
 const ErrorModal = ({ isOpen, onClose, title, message }) => {
   if (!isOpen) return null;
@@ -490,12 +488,29 @@ export default function App() {
   // Error Modal State
   const [errorModal, setErrorModal] = useState({ isOpen: false, title: '', message: '' });
 
+  // --- FIX 1: Enhanced Voice Loading for Android ---
   useEffect(() => {
     const loadVoices = () => {
       if (typeof window === 'undefined' || !window.speechSynthesis) return;
       const v = window.speechSynthesis.getVoices() || [];
-      setVoices(v);
+
+      // If voices found, set them
+      if (v.length > 0) {
+        setVoices(v);
+      } else {
+        // If not found (common on Android Chrome init), poll for them
+        const intervalId = setInterval(() => {
+          const retryVoices = window.speechSynthesis.getVoices();
+          if (retryVoices.length > 0) {
+            setVoices(retryVoices);
+            clearInterval(intervalId);
+          }
+        }, 100);
+        // Safety stop after 5s
+        setTimeout(() => clearInterval(intervalId), 5000);
+      }
     };
+
     loadVoices();
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = () => loadVoices();
@@ -750,14 +765,10 @@ export default function App() {
     }
   };
 
-  // Global unlock for Speech Synthesis on mobile
+  // --- FIX 2: Enhanced Mobile Unlock ---
   useEffect(() => {
     const unlockSpeech = () => {
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        // Try to resume speech synthesis
-        window.speechSynthesis.resume();
-        console.log('🔓 Speech synthesis unlocked');
-      }
+      enableMobileAudio(); // Use the enhanced unlocker
     };
 
     // Listen for any user interaction
@@ -774,11 +785,16 @@ export default function App() {
   const enableMobileAudio = () => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
-    // 1. Resume (เผื่อโดน pause)
-    window.speechSynthesis.resume();
+    // 1. CLEAR QUEUE (Critical for iOS)
+    window.speechSynthesis.cancel();
 
-    // 2. พูดข้อความว่างเพื่อบังคับให้ Mobile Browser เปิด Audio Context
-    const utterance = new SpeechSynthesisUtterance("");
+    // 2. RESUME
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+
+    // 3. SPEAK SILENT SPACE (Better than empty string for some browsers)
+    const utterance = new SpeechSynthesisUtterance(" ");
     utterance.volume = 0;
     utterance.rate = 1;
     window.speechSynthesis.speak(utterance);
@@ -822,8 +838,9 @@ export default function App() {
     setWordStats([]);
     setStartTime(Date.now());
     setAttempts(0);
-    // Speak immediately for Chrome Android autoplay policy
-    try { speak(`เริ่ม ${unit?.name || 'บทเรียน'}`, 'th-TH', { interrupt: true }); } catch (e) { }
+
+    // --- FIX 4: Removed conflicting speech to allow the first word to be spoken correctly ---
+    // try { speak(`เริ่ม ${unit?.name || 'บทเรียน'}`, 'th-TH', { interrupt: true }); } catch (e) { }
   };
 
   const goHome = () => {
@@ -953,26 +970,30 @@ export default function App() {
     }
   };
 
-  // Auto-read the current word when in game view
+  // --- FIX 3: Safe Auto-read with Delay & Resume ---
   useEffect(() => {
     if (screen === 'game' && vocabList && vocabList.length > 0) {
       const w = vocabList[currentIndex];
-      // Small delay to allow transition/voices to load (300ms for mobile compatibility)
+
+      // Increased delay to 500ms for Mobile Browsers to catch up
       const tid = setTimeout(() => {
         if (w && w.en) {
           console.log('🔊 Attempting to speak:', w.en);
-          // Resume for mobile browsers (required for iOS/Android)
+
+          // Safety Resume Check
           if (typeof window !== 'undefined' && window.speechSynthesis) {
             if (window.speechSynthesis.paused) {
               window.speechSynthesis.resume();
             }
           }
-          speak(w.en, 'en-US', { interrupt: false });
+          // Speak with interrupt: true is generally safe here if we waited 500ms
+          speak(w.en, 'en-US', { interrupt: true });
         }
-      }, 300); // Increased to 300ms for mobile browser compatibility
+      }, 500);
+
       return () => clearTimeout(tid);
     }
-  }, [currentIndex, screen, vocabList, voices]); // Removed speak to prevent re-triggering
+  }, [currentIndex, screen, vocabList, voices]);
 
   // Auto-hide hint after 5 seconds
   useEffect(() => {
@@ -1563,37 +1584,3 @@ export default function App() {
     </div>
   );
 }
-
-// Play start sound when a unit is selected
-const playStartSound = () => {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-
-    const ctx = new AudioContext();
-
-    // Ensure AudioContext is not suspended
-    if (ctx.state === 'suspended') {
-      ctx.resume();
-    }
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    const now = ctx.currentTime;
-
-    // Start sound: simple tone
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(440, now);
-
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-
-    osc.start(now);
-    osc.stop(now + 0.5);
-  } catch (e) {
-    console.error("Audio FX error", e);
-  }
-};
