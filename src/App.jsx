@@ -1508,3 +1508,37 @@ export default function App() {
     </div>
   );
 }
+
+// Play start sound when a unit is selected
+const playStartSound = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    const ctx = new AudioContext();
+
+    // Ensure AudioContext is not suspended
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    const now = ctx.currentTime;
+
+    // Start sound: simple tone
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(440, now);
+
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+    osc.start(now);
+    osc.stop(now + 0.5);
+  } catch (e) {
+    console.error("Audio FX error", e);
+  }
+};
