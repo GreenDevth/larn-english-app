@@ -467,6 +467,7 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem('voicePrefs') || '{}'); } catch (e) { return {}; }
   });
   const [particleType, setParticleType] = useState(null); // 'correct', 'wrong'
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
 
   // System voice language (EN/TH)
   const [systemVoiceLang, setSystemVoiceLang] = useState(() => {
@@ -923,6 +924,28 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [showHint]);
+
+  // Unlock audio on mobile devices
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (!audioUnlocked) {
+        // Create a silent utterance to unlock audio
+        const utterance = new SpeechSynthesisUtterance('');
+        utterance.volume = 0;
+        window.speechSynthesis.speak(utterance);
+        setAudioUnlocked(true);
+      }
+    };
+
+    // Listen for first user interaction
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
+
+    return () => {
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('click', unlockAudio);
+    };
+  }, [audioUnlocked]);
 
   // --- Game Logic ---
   const handleKeyPress = (key) => {
