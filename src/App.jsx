@@ -940,6 +940,13 @@ export default function App() {
         try { window.speechSynthesis.cancel(); } catch (e) { }
       }
 
+      // CRITICAL: Resume before speaking (required for mobile browsers)
+      try {
+        if (window.speechSynthesis.paused || window.speechSynthesis.pending) {
+          window.speechSynthesis.resume();
+        }
+      } catch (e) { }
+
       window.speechSynthesis.speak(u);
     } catch (e) {
       // ignore if not available
