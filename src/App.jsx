@@ -928,10 +928,17 @@ export default function App() {
   useEffect(() => {
     if (screen === 'game' && vocabList && vocabList.length > 0) {
       const w = vocabList[currentIndex];
-      // Small delay to allow transition/voices to load
+      // Small delay to allow transition/voices to load (reduced for mobile)
       const tid = setTimeout(() => {
-        if (w && w.en) speak(w.en, 'en-US', { interrupt: false });
-      }, 500);
+        if (w && w.en) {
+          console.log('🔊 Attempting to speak:', w.en);
+          // Resume for mobile browsers
+          if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.resume();
+          }
+          speak(w.en, 'en-US', { interrupt: false });
+        }
+      }, 100); // Reduced from 500ms to 100ms for mobile
       return () => clearTimeout(tid);
     }
   }, [currentIndex, screen, vocabList, voices]); // Removed speak to prevent re-triggering
