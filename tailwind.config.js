@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Fredoka', 'Sarabun', 'sans-serif'],
+        sans: ['Mali', 'Fredoka', 'Sarabun', 'sans-serif'],
       },
     },
   },

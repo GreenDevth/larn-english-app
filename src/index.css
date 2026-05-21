@@ -40,7 +40,7 @@ body {
   margin: 0;
   background: #f0f6ff;
   /* Prefer local fonts when available, otherwise fall back to Google-hosted fonts */
-  font-family: 'Baloo 2 Local', 'Baloo 2', 'Fredoka', 'Sarabun Local', 'Sarabun', sans-serif;
+  font-family: 'Mali', 'Baloo 2 Local', 'Baloo 2', 'Fredoka', 'Sarabun Local', 'Sarabun', sans-serif;
 }
 
 /* Fallback styles so site looks good even if Tailwind utilities are not applied */
